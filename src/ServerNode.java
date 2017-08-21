@@ -33,6 +33,9 @@ public  class ServerNode extends UntypedActor {
             } catch (Throwable e) {
                 System.out.println(e.getStackTrace());
             }
+            if (state == ServerState.FOLLOWER){
+                FollowerState.startElection();
+        }
         }
         System.out.println("Participants.size() "+participants.size()+"  server id "+ id);
     }
