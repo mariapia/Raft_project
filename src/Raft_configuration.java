@@ -20,7 +20,7 @@ public class Raft_configuration {
         List<ActorRef> group = new ArrayList<>();
 
         for (int i=0; i < config.getInt("N_SERVER"); i++){
-            int index_node = i+1;
+            int index_node = i;
             ActorRef node = system.actorOf(Props.create(ServerNode.class, i), "node_"+index_node);
             group.add(node);
         }

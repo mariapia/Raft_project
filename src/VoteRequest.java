@@ -12,8 +12,4 @@ public class VoteRequest implements Serializable {
         this.lastLogIndex = lastLogIndex;
         this.lastLogTerm = lastLogTerm;
     }
-
-    public void onReceive(ServerNode node){
-
-    }
 }

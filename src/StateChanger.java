@@ -7,7 +7,19 @@ public class StateChanger {
     public void onReceive(ServerNode node){
         switch (node.state){
             case FOLLOWER:
-                node.state = ServerState.CANDIDATE;
+                if (node.stepdown == true) {
+                    node.state = ServerState.FOLLOWER;
+                } else {
+                    node.state = ServerState.CANDIDATE;
+                }
+                break;
+
+            case CANDIDATE:
+                if (node.stepdown == true) {
+                    node.state = ServerState.FOLLOWER;
+                } else {
+                    node.state = ServerState.LEADER;
+                }
                 break;
         }
     }
