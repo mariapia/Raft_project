@@ -10,8 +10,10 @@ import java.util.List;
 
 public class StartMessage implements Serializable {
     public final List<ActorRef> group;		// an array of group members (actor references)
-    public StartMessage(List<ActorRef> group) {
+    public final ActorRef client;
+    public StartMessage(List<ActorRef> group, ActorRef client) {
         // Copying the group as an unmodifiable list
         this.group = Collections.unmodifiableList(new ArrayList<ActorRef>(group));
+        this.client = client;
     }
 }

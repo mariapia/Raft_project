@@ -62,6 +62,9 @@ public  class ServerNode extends UntypedActor {
             } catch (Throwable e) {
                 System.out.println(e.getStackTrace());
             }
+            InformClient msgToClient = new InformClient(this.id);
+            msg.client.tell(msgToClient, getSelf());
+
         }
 //            if (state == ServerState.FOLLOWER){
 //                follower();
@@ -99,6 +102,11 @@ public  class ServerNode extends UntypedActor {
                 leader(message);
                 break;
         }
+        //se sono il leader inizio a ricevere i comandi dal client
+        if (message instanceof SendCommand){
+            String commandReceived = ((SendCommand) message).command;
+            System.out.println("comando ricevuto "+ commandReceived);
+        }
 
 //        if (message instanceof VoteRequest){
 //            ((VoteRequest) message).onReceive(this);
@@ -128,6 +136,12 @@ public  class ServerNode extends UntypedActor {
     }
 
     private void leader(Object message) {
+        if (message instanceof AppendRequest){
+
+        }
+        if (message instanceof HeartBeat){
+
+        }
     }
 
     private void candidate(Object message) {
