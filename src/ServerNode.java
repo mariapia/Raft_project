@@ -65,7 +65,8 @@ public  class ServerNode extends UntypedActor {
                 System.out.println(e.getStackTrace());
             }
             if (state == ServerState.FOLLOWER){
-                startElection(id);
+                follower();
+                //startElection(id);
             }else{
                 System.out.println("In the initial phase there are not other possible states");
             }
