@@ -1,14 +1,9 @@
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.Cancellable;
-import akka.actor.UntypedActor;
+import akka.actor.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-
-import java.time.Duration;
-import java.util.concurrent.*;
-
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public  class ServerNode extends UntypedActor {
     Config config = ConfigFactory.load("application");
@@ -16,17 +11,19 @@ public  class ServerNode extends UntypedActor {
     protected List<ActorRef> participants = new ArrayList<ActorRef>();
 
     //variables in Persistent State
-    protected int currentTerm;
-    protected int votedFor;
+    protected Integer currentTerm;
+    protected Integer votedFor;
     protected ArrayList<LogEntry> log;
 
     //variables in Non-Persistent State
     protected ServerState state;
-    private int leaderID;
+    private Integer leaderID;
     private int commitIndex;
     private Integer [] nextIndex = new Integer[config.getInt("N_SERVER")];
     private Integer[] matchIndex = new Integer[config.getInt("N_SERVER")];
 
+
+    //private final static Logger fileLog = Logger.getLogger(ServerNode.class.getName());
 
     private Cancellable electionScheduler;
     private int receivedVote;
@@ -37,8 +34,6 @@ public  class ServerNode extends UntypedActor {
         super();
         this.id = id;
         this.currentTerm = 0;
-        this.log = new ArrayList<>();
-
         this.leaderID = -1;
         this.commitIndex = 0;
         this.state = ServerState.FOLLOWER;
@@ -47,14 +42,12 @@ public  class ServerNode extends UntypedActor {
             matchIndex[i] = 0;
         }
 
+        this.log = new ArrayList<>();
         this.receivedVote = 0;
         this.votes = new ArrayList<>();
         //BASE CASE - no votes received
         this.candidate_state = 0;
-
-
     }
-
 
     @Override
     public void onReceive(Object message) throws Throwable{
@@ -70,11 +63,31 @@ public  class ServerNode extends UntypedActor {
                 System.out.println(e.getStackTrace());
             }
         }
+//            if (state == ServerState.FOLLOWER){
+//                follower();
+//                //startElection(id);
+//            }else{
+//                System.out.println("In the initial phase there are not other possible states");
+//            }
+//            System.out.println("Participants.size() "+participants.size()+"  server id "+ id);
+//        }
+//        if (message instanceof AppendRequest){
+//            if (state == ServerState.LEADER){
+//                AppendRequest msgAppend = (AppendRequest) message;
+//                handleAppendRequest(msgAppend);
+//            }else{
+//                if (state != ServerState.LEADER){
+//                    System.out.println("AppendRequest can not be handle by a non-LEADER");
+//                }
+//                if (message == null){
+//                    System.out.println("No message to handle");
+//                }
+//            }
+//        }
 
         if (message instanceof StateChanger) {
             ((StateChanger) message).onReceive(this);
         }
-
         switch (this.state) {
             case FOLLOWER:
                 follower(message);
@@ -86,17 +99,32 @@ public  class ServerNode extends UntypedActor {
                 leader(message);
                 break;
         }
-//        if (state == ServerState.FOLLOWER){
-//            follower();
-//        }
-//        if (message.equals("CANDIDATE")){
-//            this.state = ServerState.CANDIDATE;
-//            candidate();
-//        }
+
 //        if (message instanceof VoteRequest){
 //            ((VoteRequest) message).onReceive(this);
 //        }
 //        //System.out.println("Participants.size() "+participants.size()+"  server id "+ id);
+
+    }
+
+
+    public void startElection(int id){
+        int idSender = id;
+        System.out.println("Start election for node " +idSender);
+
+
+    }
+
+    public void sendAppendEntries(){}
+
+    public void handleAppendRequest(AppendRequest message){}
+
+    public void stepDown(int term){
+        this.currentTerm = term;
+        this.state = ServerState.FOLLOWER;
+        this.votedFor = null;
+        //need to change the timeout
+
     }
 
     private void leader(Object message) {
@@ -143,6 +171,5 @@ public  class ServerNode extends UntypedActor {
         //else if (message instanceof ...)
     }
 }
-
 
 
