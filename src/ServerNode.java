@@ -21,7 +21,7 @@ public  class ServerNode extends UntypedActor {
     protected ArrayList<LogEntry> log;
 
     //variables in Non-Persistent State
-    private ServerState state;
+    protected ServerState state;
     private int leaderID;
     private int commitIndex;
     private Integer [] nextIndex = new Integer[config.getInt("N_SERVER")];
@@ -69,50 +69,79 @@ public  class ServerNode extends UntypedActor {
             } catch (Throwable e) {
                 System.out.println(e.getStackTrace());
             }
-            if (state == ServerState.FOLLOWER){
-                follower();
+        }
+
+        if (message instanceof StateChanger) {
+            ((StateChanger) message).onReceive(this);
+        }
+
+        switch (this.state) {
+            case FOLLOWER:
+                follower(message);
+                break;
+            case CANDIDATE:
+                candidate(message);
+                break;
+            case LEADER:
+                leader(message);
+                break;
+        }
+//        if (state == ServerState.FOLLOWER){
+//            follower();
+//        }
+//        if (message.equals("CANDIDATE")){
+//            this.state = ServerState.CANDIDATE;
+//            candidate();
+//        }
+//        if (message instanceof VoteRequest){
+//            ((VoteRequest) message).onReceive(this);
+//        }
+//        //System.out.println("Participants.size() "+participants.size()+"  server id "+ id);
+    }
+
+    private void leader(Object message) {
+    }
+
+    private void candidate(Object message) {
+        if (message instanceof StateChanger) {
+            System.out.println("SONO CANDIDATE e sono " + this.id);
+            switch (this.receivedVote) {
+
+                //NO VOTES RECEIVED
+                case 0:
+                    this.currentTerm++;
+                    this.votedFor = this.id;
+                    this.votes.add(this.id);
+
+                    int lastLogIndex = 0;
+                    int lastLogTerm = 0;
+
+                    if (this.log.size() > 0) {
+                        lastLogIndex = this.log.size() - 1;
+                        lastLogTerm = this.log.get(lastLogIndex).term;
+                    }
+
+                    for (ActorRef q : participants) {
+                        if (q != getSelf()) {
+                            q.tell(new VoteRequest(this.id, this.currentTerm, lastLogIndex, lastLogTerm), getSelf());
+                        }
+                    }
             }
         }
-        if (message.equals("CANDIDATE")){
-            candidate();
+        //TODO
+        //else if (message instanceof ...)
+    }
+
+    private void follower(Object message) {
+        if (message instanceof StartMessage || message instanceof ElectionMessage) {
+            int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
+
+            //scheduling of message to change state
+            electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new StateChanger(), getContext().system().dispatcher(), getSelf());
         }
-        //System.out.println("Participants.size() "+participants.size()+"  server id "+ id);
+        //TODO
+        //else if (message instanceof ...)
     }
-
-    private void candidate() {
-        System.out.println("SONO CANDIDATE e sono " + this.id);
-       switch(this.receivedVote) {
-
-           //NO VOTES RECEIVED
-           case 0:
-               this.currentTerm++;
-               this.votedFor = this.id;
-               this.votes.add(this.id);
-
-               int lastLogIndex = 0;
-               int lastLogTerm = 0;
-
-               if(this.log.size() > 0){
-                   lastLogIndex = this.log.size()-1;
-                   lastLogTerm = this.log.get(lastLogIndex).term;
-               }
-
-               for ( ActorRef q : participants) {
-                   if (q != getSelf()){
-                       q.tell(new VoteRequest(this.id, this.currentTerm, lastLogIndex, lastLogTerm), getSelf());
-                   }
-               }
-       }
-    }
-
-    private void follower() {
-        int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT")+1);
-
-        //scheduling of message to change state
-        electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), "CANDIDATE", getContext().system().dispatcher(), getSelf());
-    }
-
-
 }
 
 

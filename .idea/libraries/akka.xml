@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="akka">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../akka-2.4.14/lib/akka" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/../akka-2.4.14/lib/akka" recursive="false" />
+  </library>
+</component>
