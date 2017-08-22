@@ -65,9 +65,7 @@ public  class ServerNode extends UntypedActor {
             } catch (Throwable e) {
                 System.out.println(e.getStackTrace());
             }
-            //inform client who is the leader and that it can start send messages
-            InformClient msgToClient = new InformClient(this.id, true);
-            client.tell(msgToClient, getSelf());
+
 
         }
 //            if (state == ServerState.FOLLOWER){
@@ -106,19 +104,7 @@ public  class ServerNode extends UntypedActor {
                 leader(message);
                 break;
         }
-        //se sono il leader inizio a ricevere i comandi dal client
-        if (message instanceof SendCommand){
-            String commandReceived = ((SendCommand) message).command;
-            if (getSender().equals(client)){
-                System.out.println("comando ricevuto "+ commandReceived);
-                Boolean commandCommited = true;
-                InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
-                client.tell(resultCommand, getSelf());
-            }else{
-                System.out.println("ERROR, sendCommand must be sent by client");
-            }
 
-        }
 
 //        if (message instanceof VoteRequest){
 //            ((VoteRequest) message).onReceive(this);
@@ -148,6 +134,27 @@ public  class ServerNode extends UntypedActor {
     }
 
     private void leader(Object message) {
+        //TODO: if votazione finita, sono il leader, comunico al client il mio id
+        //inform client who is the leader and that it can start send messages
+        InformClient msgToClient = new InformClient(this.id, true);
+        client.tell(msgToClient, getSelf());
+        //TODO: endif
+        
+        //se sono il leader inizio a ricevere i comandi dal client
+        if (message instanceof SendCommand){
+            String commandReceived = ((SendCommand) message).command;
+            if (getSender().equals(client)){
+                //flag to know if the command has been committed
+                Boolean commandCommited = true;
+                //inform the client about the operation result
+                InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
+                client.tell(resultCommand, getSelf());
+            }else{
+                System.out.println("ERROR, sendCommand must be sent by client");
+            }
+
+        }
+
         if (message instanceof AppendRequest){
 
         }

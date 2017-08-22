@@ -13,7 +13,6 @@ public class Client extends UntypedActor {
 
     protected String[] commandList = new String[10];
     protected int INDEXCOMMAND = 0;
-    protected boolean stopSend = false;
 
     protected Boolean resultCommand = true;
 
@@ -32,21 +31,22 @@ public class Client extends UntypedActor {
             leader = getSender();
             resultCommand = ((InformClient) message).commandExecuted;
             sendCommands(resultCommand);
+
         }
 
     }
 
     public void sendCommands(boolean resultCommand){
         String commandToExecute;
-
-        while(!stopSend && resultCommand){
+        System.out.println("Valore resultCommand "+resultCommand);
+        while(resultCommand){
             commandToExecute = getCommand(INDEXCOMMAND);
             SendCommand msgSendCommand = new SendCommand(commandToExecute);
             leader.tell(msgSendCommand, getSelf());
             System.out.println("Sono il client e ho inviato il comando"+msgSendCommand.command);
             if (INDEXCOMMAND == 9){
+                System.out.println("Valore INDEXCOMMAND "+INDEXCOMMAND);
                //go to sleep
-                stopSend = true;
                 resultCommand = false;
 
             }
