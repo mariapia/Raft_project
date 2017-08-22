@@ -2,17 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="46cdfad0-5e2f-4059-b0b2-eb1427b7dcfb" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/Raft_configuration.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/Raft_configuration.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/ServerNode$1.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/ServerNode$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/ServerNode.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/ServerNode.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/StartMessage.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/StartMessage.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/application.conf" afterPath="$PROJECT_DIR$/out/production/Raft_project/application.conf" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Raft_configuration.java" afterPath="$PROJECT_DIR$/src/Raft_configuration.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Client.java" afterPath="$PROJECT_DIR$/src/Client.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/InformClient.java" afterPath="$PROJECT_DIR$/src/InformClient.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ServerNode.java" afterPath="$PROJECT_DIR$/src/ServerNode.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/StartMessage.java" afterPath="$PROJECT_DIR$/src/StartMessage.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/application.conf" afterPath="$PROJECT_DIR$/src/application.conf" />
     </list>
     <ignored path="Raft_project.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -66,8 +58,8 @@
       <file leaf-file-name="ServerNode.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/ServerNode.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1836">
-              <caret line="107" column="67" lean-forward="false" selection-start-line="107" selection-start-column="67" selection-end-line="107" selection-end-column="67" />
+            <state relative-caret-position="-353">
+              <caret line="67" column="81" lean-forward="false" selection-start-line="67" selection-start-column="81" selection-end-line="67" selection-end-column="81" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -78,12 +70,9 @@
       <file leaf-file-name="InformClient.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/InformClient.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="6" column="31" lean-forward="false" selection-start-line="6" selection-start-column="31" selection-end-line="6" selection-end-column="31" />
-              <folding>
-                <element signature="e#151#152#0" expanded="true" />
-                <element signature="e#189#190#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="252">
+              <caret line="14" column="0" lean-forward="true" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -91,8 +80,8 @@
       <file leaf-file-name="Client.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Client.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="540">
-              <caret line="42" column="46" lean-forward="false" selection-start-line="42" selection-start-column="46" selection-end-line="42" selection-end-column="46" />
+            <state relative-caret-position="288">
+              <caret line="28" column="42" lean-forward="true" selection-start-line="28" selection-start-column="42" selection-end-line="28" selection-end-column="42" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -177,8 +166,8 @@
         <option value="$PROJECT_DIR$/src/application.conf" />
         <option value="$PROJECT_DIR$/src/Raft_configuration.java" />
         <option value="$PROJECT_DIR$/src/StartMessage.java" />
-        <option value="$PROJECT_DIR$/src/InformClient.java" />
         <option value="$PROJECT_DIR$/src/SendCommand.java" />
+        <option value="$PROJECT_DIR$/src/InformClient.java" />
         <option value="$PROJECT_DIR$/src/ServerNode.java" />
         <option value="$PROJECT_DIR$/src/Client.java" />
       </list>
@@ -749,12 +738,12 @@
       <workItem from="1503309876148" duration="20103000" />
       <workItem from="1503397526362" duration="5020000" />
       <workItem from="1503414123728" duration="42000" />
-      <workItem from="1503414338030" duration="164000" />
+      <workItem from="1503414338030" duration="1779000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="30761000" />
+    <option name="totallyTimeSpent" value="32376000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-1" y="-11" width="1922" height="1043" extended-state="6" />
@@ -768,7 +757,7 @@
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.07403315" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.8453039" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32939914" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -1036,17 +1025,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/InformClient.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="31" lean-forward="false" selection-start-line="6" selection-start-column="31" selection-end-line="6" selection-end-column="31" />
-          <folding>
-            <element signature="e#151#152#0" expanded="true" />
-            <element signature="e#189#190#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/SendCommand.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="90">
@@ -1054,16 +1032,6 @@
           <folding>
             <element signature="e#153#154#0" expanded="true" />
             <element signature="e#191#192#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/ServerNode.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1836">
-          <caret line="107" column="67" lean-forward="false" selection-start-line="107" selection-start-column="67" selection-end-line="107" selection-end-column="67" />
-          <folding>
-            <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1084,10 +1052,28 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/InformClient.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="252">
+          <caret line="14" column="0" lean-forward="true" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ServerNode.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-353">
+          <caret line="67" column="81" lean-forward="false" selection-start-line="67" selection-start-column="81" selection-end-line="67" selection-end-column="81" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/Client.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="42" column="46" lean-forward="false" selection-start-line="42" selection-start-column="46" selection-end-line="42" selection-end-column="46" />
+        <state relative-caret-position="288">
+          <caret line="28" column="42" lean-forward="true" selection-start-line="28" selection-start-column="42" selection-end-line="28" selection-end-column="42" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>

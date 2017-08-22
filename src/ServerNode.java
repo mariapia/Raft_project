@@ -22,6 +22,8 @@ public  class ServerNode extends UntypedActor {
     private Integer [] nextIndex = new Integer[config.getInt("N_SERVER")];
     private Integer[] matchIndex = new Integer[config.getInt("N_SERVER")];
 
+    private ActorRef client;
+
 
     //private final static Logger fileLog = Logger.getLogger(ServerNode.class.getName());
 
@@ -53,6 +55,7 @@ public  class ServerNode extends UntypedActor {
     public void onReceive(Object message) throws Throwable{
         if (message instanceof StartMessage) {
             StartMessage msg = (StartMessage) message;
+            client = msg.client;
             try {
                 for (int i = 0; i < msg.group.size(); i++) {
                     this.participants.add(msg.group.get(i));
@@ -62,8 +65,9 @@ public  class ServerNode extends UntypedActor {
             } catch (Throwable e) {
                 System.out.println(e.getStackTrace());
             }
-            InformClient msgToClient = new InformClient(this.id);
-            msg.client.tell(msgToClient, getSelf());
+            //inform client who is the leader and that it can start send messages
+            InformClient msgToClient = new InformClient(this.id, true);
+            client.tell(msgToClient, getSelf());
 
         }
 //            if (state == ServerState.FOLLOWER){
@@ -105,7 +109,15 @@ public  class ServerNode extends UntypedActor {
         //se sono il leader inizio a ricevere i comandi dal client
         if (message instanceof SendCommand){
             String commandReceived = ((SendCommand) message).command;
-            System.out.println("comando ricevuto "+ commandReceived);
+            if (getSender().equals(client)){
+                System.out.println("comando ricevuto "+ commandReceived);
+                Boolean commandCommited = true;
+                InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
+                client.tell(resultCommand, getSelf());
+            }else{
+                System.out.println("ERROR, sendCommand must be sent by client");
+            }
+
         }
 
 //        if (message instanceof VoteRequest){

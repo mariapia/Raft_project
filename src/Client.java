@@ -15,6 +15,8 @@ public class Client extends UntypedActor {
     protected int INDEXCOMMAND = 0;
     protected boolean stopSend = false;
 
+    protected Boolean resultCommand = true;
+
     public Client(int id){
         this.id = id;
         for (int i=0; i<10; i++){
@@ -28,15 +30,16 @@ public class Client extends UntypedActor {
         if (message instanceof InformClient){
             this.leaderID = ((InformClient) message).leaderID;
             leader = getSender();
-            sendCommands();
+            resultCommand = ((InformClient) message).commandExecuted;
+            sendCommands(resultCommand);
         }
 
     }
 
-    public void sendCommands(){
+    public void sendCommands(boolean resultCommand){
         String commandToExecute;
 
-        while(!stopSend){
+        while(!stopSend && resultCommand){
             commandToExecute = getCommand(INDEXCOMMAND);
             SendCommand msgSendCommand = new SendCommand(commandToExecute);
             leader.tell(msgSendCommand, getSelf());
@@ -44,6 +47,7 @@ public class Client extends UntypedActor {
             if (INDEXCOMMAND == 9){
                //go to sleep
                 stopSend = true;
+                resultCommand = false;
 
             }
         }
