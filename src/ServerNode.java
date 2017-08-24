@@ -192,6 +192,11 @@ public  class ServerNode extends UntypedActor {
                     System.out.println("\nreceived failure by peer "+senderID+"\n");
                     this.nextIndex[senderID] = Math.max(1, indexStoriesReceived);
                 }
+                if(this.nextIndex[senderID]<(this.log.size()-1)){
+                    System.out.println("\n l'index del peer è minore rispetto al mio index ---> Bisogna aggiustare\n");
+                    sendAppendEntries(getSender());
+                }
+
                 //adjust peer's log
 //                if(this.nextIndex[senderID]<= this.log.size()){
 //                    sendAppendEntries(getSender());
