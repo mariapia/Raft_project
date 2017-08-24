@@ -137,6 +137,7 @@ public  class ServerNode extends UntypedActor {
         //se sono il leader inizio a ricevere i comandi dal client
         if (message instanceof SendCommand){
             String commandReceived = ((SendCommand) message).command;
+            alreadySent = false;
             if (getSender().equals(client)){
                 System.out.println("_____________________________________________________NEW COMMAND BY CLIENT: "+commandReceived+"____________________________________________\n");
                 LogEntry newEntry = new LogEntry(currentTerm,commandReceived);
@@ -173,13 +174,16 @@ public  class ServerNode extends UntypedActor {
             termsPeers[senderID]=lastTermSavedPeer;
 
             if (termReceived > this.currentTerm){
+                System.out.println("\nterm received greater than currentTerm\n");
                 stepDown(termReceived);
             }else if(termReceived == this.currentTerm){
                 if (successReceived){
+                    System.out.println("\nreceived success by peer "+senderID+"\n");
                     //update information about next free slot for peer's log
                     this.nextIndex[senderID] = indexStoriesReceived+1;
                     getReply[senderID] = true;
                 }else{
+                    System.out.println("\nreceived failure by peer "+senderID+"\n");
                     this.nextIndex[senderID] = Math.max(1, indexStoriesReceived);
                 }
                 //adjust peer's log
@@ -189,6 +193,7 @@ public  class ServerNode extends UntypedActor {
             }
 
             if(checkMajorityReply(getReply) && checkMajorityCurrentTerm(this.currentTerm, termsPeers)){
+                System.out.println("\nin DOUBLE CHECK\n");
                 Boolean commandCommited = true;
                 InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
                 this.commitIndex++;
@@ -207,6 +212,11 @@ public  class ServerNode extends UntypedActor {
                 Boolean commandCommited = false;
                 InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
                 //client.tell(resultCommand, getSelf());
+            }
+            if(alreadySent){
+                for(int i=0; i<getReply.length; i++){
+                    getReply[i]=false;
+                }
             }
 
 
