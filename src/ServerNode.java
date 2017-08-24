@@ -38,6 +38,7 @@ public  class ServerNode extends UntypedActor {
 
     //to check how many peer send me a positive reply (used only by leader)
     private boolean[] getReply = new boolean[config.getInt("N_SERVER")];
+    private int[] termsPeers = new int[config.getInt("N_SERVER")];
     private boolean alreadySent = false;
 
 
@@ -50,8 +51,8 @@ public  class ServerNode extends UntypedActor {
         this.commitIndex = 0;
         this.state = ServerState.FOLLOWER;
         for (int i =0; i<config.getInt("N_SERVER"); i++) {
-            nextIndex[i] = 0;
-            //nextIndex[i] = 1;
+            //nextIndex[i] = 0;
+            nextIndex[i] = 1;
             matchIndex[i] = 0;
         }
 
@@ -136,14 +137,10 @@ public  class ServerNode extends UntypedActor {
 
                 LogEntry newEntry = new LogEntry(currentTerm,commandReceived);
                 log.add(newEntry);
-                int[] ids = new int[this.participants.size()];
-                for(int i=0; i<this.participants.size(); i++){
-                    ids[i]=i;
-                }
+                System.out.println("LEADER LOG term: "+this.log.get(nextIndex[this.id]-1).term+", command: "+this.log.get(nextIndex[this.id]-1).command);
+
                 for(ActorRef peer : this.participants){
-                    //System.out.println("nome di ogni peer nel sistema  "+peer.path().name());
                     if(peer!=getSelf()) {
-                        //System.out.println("--------------------------NUOVO PEER-----------------------------------------");
                         sendAppendEntries(peer);
                     }
 
@@ -159,38 +156,44 @@ public  class ServerNode extends UntypedActor {
             boolean successReceived = ((AppendReply) message).success;
             int indexStoriesReceived = ((AppendReply) message).indexStories;
             int senderID = ((AppendReply) message).senderID;
-            System.out.println("in AppendReply. PeerSender ="+senderID+" indeStoriesReceived ="+indexStoriesReceived+"\n");
+            int lastTermSavedPeer = ((AppendReply) message).lastTermSaved;
+            System.out.println("LEADER ---> ricevuto AppendReply da PEER "+senderID+"\n");
 
             getReply[this.id] = true;
+            termsPeers[this.id] = this.log.get(nextIndex[this.id]-1).term;
+            termsPeers[senderID]=lastTermSavedPeer;
 
             if (termReceived > this.currentTerm){
                 stepDown(termReceived);
             }else if(termReceived == this.currentTerm){
                 if (successReceived){
-                    System.out.println("LEADER ---->  ho ricevuto un successo da un peer");
+                    //update information about next free slot for peer's log
                     this.nextIndex[senderID] = indexStoriesReceived;
-                    System.out.println("sender = "+senderID+"    nextIndex[senderID] = "+this.nextIndex[senderID]);
                     getReply[senderID] = true;
                 }else{
-                    //TODO: check if the range is correct
-                    if(nextIndex[senderID] == 0){
-                        nextIndex[senderID] = Math.max(indexStoriesReceived, nextIndex[senderID]);
-                    }else {
-                        nextIndex[senderID] = Math.max(indexStoriesReceived, nextIndex[senderID] - 1);
-                    }
+                    this.nextIndex[senderID] = Math.max(1, indexStoriesReceived);
+                }
+                //adjust peer's log
+                if(this.nextIndex[senderID]<= this.log.size()){
+                    sendAppendEntries(getSender());
                 }
             }
 
-            for (int i=0; i<getReply.length; i++){
-                //System.out.println("getReply[i] ----> "+getReply[i]);
-            }
-            if(checkMajorityReply(getReply)){
+            if(checkMajorityReply(getReply) && checkMajorityCurrentTerm(this.currentTerm, termsPeers)){
                 Boolean commandCommited = true;
                 InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
+                this.commitIndex++;
                 if(!alreadySent) {
                     System.out.println("LEADER ----> Il comando può essere committato. Il client viene informato");
                     client.tell(resultCommand, getSelf());
                     alreadySent = true;
+                    UpdateCommitIndex update = new UpdateCommitIndex(true);
+                    for(ActorRef peer : this.participants){
+                        if(peer!=getSelf()){
+                            peer.tell(update, getSelf());
+                        }
+
+                    }
                 }
             }else{
                 Boolean commandCommited = false;
@@ -252,7 +255,7 @@ public  class ServerNode extends UntypedActor {
         //TODO
         //else if (message instanceof ...)
         if (message instanceof AppendRequest){
-            System.out.println("FOLLOWER "+this.id+"---> Ho ricevuto un AppendRequest");
+            System.out.println("PEER "+this.id+"---> Ho ricevuto un AppendRequest");
             int termReceived = ((AppendRequest) message).term;
             int prevIndexReceived = ((AppendRequest) message).prevIndex;
             int prevTermReceived = ((AppendRequest) message).prevTerm;
@@ -268,38 +271,39 @@ public  class ServerNode extends UntypedActor {
             else if (termReceived < this.currentTerm){
                 System.out.println("success = FALSE, invio risposta al leader");
                 success = false;
-                AppendReply response = new AppendReply(this.id, this.currentTerm, success, indexStories);
+                int lastTermSaved = this.log.get(this.indexStories-1).term;
+                AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved);
                 getSender().tell(response, getSelf());
             }else{
-                //TODO: check if is correct the interpretation of index in slide 31
-                if(!this.log.isEmpty()){
-                    System.out.println("prevIndex Received  "+prevIndexReceived);
-                    System.out.println("this.log.size()  "+this.log.size());
-                    //System.out.println("this.log.get(prevIndexReceived).tern  "+this.log.get(prevIndexReceived).term);
-                    System.out.println("prevTermReceived   "+prevTermReceived);
-                }
-
-
+                this.indexStories = 0;
                 if(this.log.isEmpty()){
                     success = true;
-                }else if(this.log.get(prevIndexReceived-1).term == prevTermReceived){
+                }else if(this.log.get(prevIndexReceived).term == prevTermReceived){
                     success = true;
                 }
                 if (success){
-                    //System.out.println("NODE "+this.id+"_______indexStories before ____"+this.indexStories);
+                    System.out.println("PEER "+this.id+" ---> ho avuto successo\n");
                     this.indexStories= storeEntries(prevIndexReceived, entriesReceived, commitIndexReceived);
                     //System.out.println("NODE "+this.id+"_______indexStories after ____"+this.indexStories);
                     for (int i=0; i<this.log.size(); i++){
                         System.out.println("LOG NODE "+this.id+" n_elements "+this.log.size()+" ----- command: "+log.get(i).command+" ------  term: "+log.get(i).term+"~~~~\n");
                     }
-                    System.out.println("Cosa passo al leader come risposta  ID= "+this.id+",  CURRENTTERM= "+this.currentTerm+",  SUCCESS = "+success+",  INDEXSOTRIES= "+indexStories+"\n");
-                    AppendReply response  = new AppendReply(this.id, this.currentTerm, success, indexStories);
+                    int lastTermSaved = this.log.get(this.indexStories-1).term;
+                    AppendReply response  = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved);
+                    System.out.println("PEER "+this.id+" --> invio di AppendReply al leader");
                     getSender().tell(response, getSelf());
 
                 }
 
             }
 
+        }
+        if(message instanceof UpdateCommitIndex){
+            boolean result = ((UpdateCommitIndex) message).increment;
+            System.out.println("PEER "+this.id+" ---> risltato operazione commit ricevuta = "+result);
+            if(result){
+                this.commitIndex++;
+            }
         }
     }
 
@@ -312,16 +316,15 @@ public  class ServerNode extends UntypedActor {
             System.out.println("nextIndex["+i+"] = "+nextIndex[id_peer]+"\n");
         }
 
-        int lastLogIndex = nextIndex[id_peer];
-        this.nextIndex[id_peer] = lastLogIndex;
+        int nextIndexLogPeer = nextIndex[id_peer];
+        this.nextIndex[id_peer] = nextIndexLogPeer;
 
         //System.out.println("prima di chiamare getEntriesToSend. lastLogIndex = "+lastLogIndex+", logLeder.size= "+this.log.size()+"\n");
 
-        ArrayList<LogEntry> entries = getEntriesToSend(this.log, (lastLogIndex));
+        ArrayList<LogEntry> entries = getEntriesToSend(this.log, (nextIndexLogPeer-1));
 
-        System.out.println("cosa mando nell'append Request --> currentTerm = "+this.currentTerm+",  lastLogIndex = "+(lastLogIndex)+", log[lastLogIndex-1].term = "+this.log.get(lastLogIndex).term+", entries.size() = "+entries.size()+",  this.commitIndex ="+this.commitIndex+"\n");
-        AppendRequest appendRequest = new AppendRequest(this.id, this.currentTerm, (lastLogIndex), this.log.get(lastLogIndex).term, entries, this.commitIndex);
-        //System.out.println("sendAppendEntries() --> sto inviando al peer un AppendRequest\n");
+        AppendRequest appendRequest = new AppendRequest(this.id, this.currentTerm, (nextIndexLogPeer-1), this.log.get(nextIndexLogPeer-1).term, entries, this.commitIndex);
+        System.out.println("Invio al peer "+id_peer+" di una AppendRequest\n");
         peer.tell(appendRequest, getSelf());
 
 
@@ -343,46 +346,56 @@ public  class ServerNode extends UntypedActor {
         }
     }
 
-    private int storeEntries(int prevIndex, ArrayList<LogEntry> entries,int commitIndex){
-        indexStories = prevIndex;
-
-        System.out.println("indexStories in storeEntries  ==== "+indexStories);
-        if(this.log.isEmpty()){
-            //System.out.println("STORE_ENTRIES --> log era vuoto\n");
-            this.log.add(entries.get(indexStories));
-            indexStories = indexStories+1;
-            System.out.println("Il mio log è vuoto");
-        }else {
-            System.out.println("PEER ="+this.id+", il mio log NON è vuoto. E' di size = "+this.log.size());
-            for (int j = 1; j <= getLastLogIndex(entries); j++) {
-                //indexStories = indexStories + 1;
-                if (this.log.get(indexStories).term != entries.get(j).term) {
-                    this.log.get(indexStories).term = 0;
-                    this.log.get(indexStories).command = "";
-                    this.log.add(entries.get(indexStories));
-
-                }
-                indexStories = indexStories + 1;
+    private boolean checkMajorityCurrentTerm(int currentTerm, int[] termPeer){
+        int nPeerWithMyTerm=0;
+        for (int i=0; i<termPeer.length; i++){
+            if(currentTerm == termPeer[i]){
+                nPeerWithMyTerm++;
             }
         }
-        this.commitIndex = Math.min(commitIndex, indexStories);
-        System.out.println("CommitIndex dopo lo storeEntries  --> "+this.commitIndex+"     indexStories return = "+indexStories);
+        if(nPeerWithMyTerm> termPeer.length/2){
+            return true;
+        }else{
+            return false;
+        }
+    }
 
-        return indexStories;
+    private int storeEntries(int prevIndex, ArrayList<LogEntry> entries,int commitIndex){
+        int index = prevIndex;
+
+        if(this.log.isEmpty()){
+            for(int i=0; i<entries.size(); i++) {
+                this.log.add(entries.get(i));
+                index = index + 1;
+            }
+        }else {
+            for (int j=0; j<entries.size(); j++) {
+                if (this.log.get(index).term != entries.get(j).term) {
+                    //remove entry that does not fit with leader's entry
+                    this.log.remove(index);
+                    this.log.add(entries.get(j));
+                }
+                index = index + 1;
+            }
+        }
+        //at the end of the for loop, index point to the next free index
+        //commitIndex is the minimum between what the peer has stored and what the peer has reched adding entries
+        this.commitIndex = Math.min(commitIndex, (index-1));
+        //return the index to the first slot free in peer's log
+        return index;
 
     }
 
     private ArrayList<LogEntry> getEntriesToSend(ArrayList<LogEntry> logLeader, int lastLogIndex){
         System.out.println("Sono nella chiamata getEntriesToSend. logLeader.size() = "+logLeader.size()+",  lastLogIndex = "+lastLogIndex+"\n");
-
+        //lastLogIndex is the index of the last log written by peer
         ArrayList<LogEntry> entries = new ArrayList<>();
         int start = lastLogIndex;
         int end = logLeader.size();
-        //System.out.println("START = "+start+"  END = "+end);
-        for (int i=0; i<(end-start)+1; i++){
+        System.out.println("START = "+start+"  END = "+end);
+        for (int i=start; i<end; i++){
             //System.out.println("Sono nel ciclo i="+i);
-            entries.add(logLeader.get(start));
-            start++;
+            entries.add(logLeader.get(i));
         }
         return  entries;
     }
