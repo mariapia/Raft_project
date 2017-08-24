@@ -39,7 +39,7 @@ public class Client extends UntypedActor {
     public void sendCommands(boolean resultCommand){
         String commandToExecute;
         System.out.println();
-        if(resultCommand && INDEXCOMMAND<commandList.length) {
+        if(INDEXCOMMAND<commandList.length) {
             //commandToExecute = getCommand(INDEXCOMMAND);
             commandToExecute = commandList[INDEXCOMMAND];
             SendCommand msgSendCommand = new SendCommand(commandToExecute);

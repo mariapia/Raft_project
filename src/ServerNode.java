@@ -42,6 +42,9 @@ public  class ServerNode extends UntypedActor {
     private boolean alreadySent = false;
 
 
+    //indice di controllo per debug, TODO: da rimuovere
+    private int contatoreNumeroReplyRicevute =0;
+
     public ServerNode(int id){
         super();
         this.id = id;
@@ -64,6 +67,8 @@ public  class ServerNode extends UntypedActor {
         if(this.id == 0){
             this.state = ServerState.LEADER;
         }
+        //aggiungo al log con index = 0 una entry nulla, per far partire il log dalla posizione 1 così che combaci con l'index dell'algoritmo
+        this.log.add(0, null);
 
     }
 
@@ -133,12 +138,15 @@ public  class ServerNode extends UntypedActor {
         if (message instanceof SendCommand){
             String commandReceived = ((SendCommand) message).command;
             if (getSender().equals(client)){
-                System.out.println("LEADER ------> ho ricevuto un comando dal client "+commandReceived);
-
+                System.out.println("_____________________________________________________NEW COMMAND BY CLIENT: "+commandReceived+"____________________________________________\n");
                 LogEntry newEntry = new LogEntry(currentTerm,commandReceived);
                 log.add(newEntry);
-                System.out.println("LEADER LOG term: "+this.log.get(nextIndex[this.id]-1).term+", command: "+this.log.get(nextIndex[this.id]-1).command);
-
+                this.nextIndex[this.id]= this.nextIndex[this.id]+1;
+                System.out.println("LEADER LOG size "+(this.log.size()-1));
+                for(int i=1; i<this.log.size(); i++){
+                    System.out.println("LEADER LOG entry n. "+i+"   term -> "+this.log.get(i).term+",  command -> "+this.log.get(i).command);
+                }
+                System.out.println("\n");
                 for(ActorRef peer : this.participants){
                     if(peer!=getSelf()) {
                         sendAppendEntries(peer);
@@ -157,6 +165,7 @@ public  class ServerNode extends UntypedActor {
             int indexStoriesReceived = ((AppendReply) message).indexStories;
             int senderID = ((AppendReply) message).senderID;
             int lastTermSavedPeer = ((AppendReply) message).lastTermSaved;
+
             System.out.println("LEADER ---> ricevuto AppendReply da PEER "+senderID+"\n");
 
             getReply[this.id] = true;
@@ -168,15 +177,15 @@ public  class ServerNode extends UntypedActor {
             }else if(termReceived == this.currentTerm){
                 if (successReceived){
                     //update information about next free slot for peer's log
-                    this.nextIndex[senderID] = indexStoriesReceived;
+                    this.nextIndex[senderID] = indexStoriesReceived+1;
                     getReply[senderID] = true;
                 }else{
                     this.nextIndex[senderID] = Math.max(1, indexStoriesReceived);
                 }
                 //adjust peer's log
-                if(this.nextIndex[senderID]<= this.log.size()){
-                    sendAppendEntries(getSender());
-                }
+//                if(this.nextIndex[senderID]<= this.log.size()){
+//                    sendAppendEntries(getSender());
+//                }
             }
 
             if(checkMajorityReply(getReply) && checkMajorityCurrentTerm(this.currentTerm, termsPeers)){
@@ -190,15 +199,14 @@ public  class ServerNode extends UntypedActor {
                     UpdateCommitIndex update = new UpdateCommitIndex(true);
                     for(ActorRef peer : this.participants){
                         if(peer!=getSelf()){
-                            peer.tell(update, getSelf());
+                            //peer.tell(update, getSelf());
                         }
-
                     }
                 }
             }else{
                 Boolean commandCommited = false;
                 InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
-                client.tell(resultCommand, getSelf());
+                //client.tell(resultCommand, getSelf());
             }
 
 
@@ -276,7 +284,7 @@ public  class ServerNode extends UntypedActor {
                 getSender().tell(response, getSelf());
             }else{
                 this.indexStories = 0;
-                if(this.log.isEmpty()){
+                if(prevIndexReceived == 0){
                     success = true;
                 }else if(this.log.get(prevIndexReceived).term == prevTermReceived){
                     success = true;
@@ -285,12 +293,13 @@ public  class ServerNode extends UntypedActor {
                     System.out.println("PEER "+this.id+" ---> ho avuto successo\n");
                     this.indexStories= storeEntries(prevIndexReceived, entriesReceived, commitIndexReceived);
                     //System.out.println("NODE "+this.id+"_______indexStories after ____"+this.indexStories);
-                    for (int i=0; i<this.log.size(); i++){
-                        System.out.println("LOG NODE "+this.id+" n_elements "+this.log.size()+" ----- command: "+log.get(i).command+" ------  term: "+log.get(i).term+"~~~~\n");
+                    for (int i=1; i<this.log.size(); i++){
+                        System.out.println("LOG NODE "+this.id+" n_elements "+(this.log.size()-1)+" -----> command: "+log.get(i).command+",  term: "+log.get(i).term);
                     }
-                    int lastTermSaved = this.log.get(this.indexStories-1).term;
+                    System.out.println("\n");
+                    int lastTermSaved = this.log.get(this.indexStories).term;
                     AppendReply response  = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved);
-                    System.out.println("PEER "+this.id+" --> invio di AppendReply al leader");
+                    System.out.println("PEER "+this.id+" --> invio di AppendReply al leader\n");
                     getSender().tell(response, getSelf());
 
                 }
@@ -312,9 +321,9 @@ public  class ServerNode extends UntypedActor {
         float timeoutSendAppendEntries = System.currentTimeMillis() + ((config.getInt("MAX_TIMEOUT")-config.getInt("MAX_TIMEOUT"))/2);
         int id_peer = returnIdPeer(peer);
         System.out.println("PEER ID ------>  "+id_peer+"\n");
-        for(int i=0; i<config.getInt("N_SERVER"); i++){
-            System.out.println("nextIndex["+i+"] = "+nextIndex[id_peer]+"\n");
-        }
+//        for(int i=0; i<config.getInt("N_SERVER"); i++){
+//            System.out.println("nextIndex["+i+"] = "+nextIndex[id_peer]+"\n");
+//        }
 
         int nextIndexLogPeer = nextIndex[id_peer];
         this.nextIndex[id_peer] = nextIndexLogPeer;
@@ -323,8 +332,8 @@ public  class ServerNode extends UntypedActor {
 
         ArrayList<LogEntry> entries = getEntriesToSend(this.log, (nextIndexLogPeer-1));
 
-        AppendRequest appendRequest = new AppendRequest(this.id, this.currentTerm, (nextIndexLogPeer-1), this.log.get(nextIndexLogPeer-1).term, entries, this.commitIndex);
-        System.out.println("Invio al peer "+id_peer+" di una AppendRequest\n");
+        AppendRequest appendRequest = new AppendRequest(this.id, this.currentTerm, (nextIndexLogPeer-1), this.log.get(nextIndexLogPeer).term, entries, this.commitIndex);
+        System.out.println("Invio al peer "+id_peer+" di una AppendRequest con index di riferimento "+(nextIndexLogPeer-1) +"\n");
         peer.tell(appendRequest, getSelf());
 
 
@@ -361,6 +370,7 @@ public  class ServerNode extends UntypedActor {
     }
 
     private int storeEntries(int prevIndex, ArrayList<LogEntry> entries,int commitIndex){
+        //System.out.println("\n in storeEntries. entries.size() "+entries.size()+"\n");
         int index = prevIndex;
 
         if(this.log.isEmpty()){
@@ -370,29 +380,37 @@ public  class ServerNode extends UntypedActor {
             }
         }else {
             for (int j=0; j<entries.size(); j++) {
-                if (this.log.get(index).term != entries.get(j).term) {
+                index = index + 1;
+
+                //controllo se non ho l'entry nel log per quell'indice
+                int lastEntry = getLastLogIndex(this.log);
+                //System.out.println("\n in storeEntries. index = "+index+", peerLog.size() = "+(this.log.size()-1)+"  indexLastEntry ="+lastEntry+", prevIndex ="+prevIndex+"\n");
+                if(lastEntry == prevIndex){
+                    this.log.add(entries.get(j));
+                }else if (this.log.get(index).term != entries.get(j).term) {
+                    //se ho un term, ma non combacia con i termi presenti nel log, lo rimuovo e aggiungo quello corretto del leader
                     //remove entry that does not fit with leader's entry
                     this.log.remove(index);
                     this.log.add(entries.get(j));
                 }
-                index = index + 1;
+                prevIndex++;
             }
         }
         //at the end of the for loop, index point to the next free index
         //commitIndex is the minimum between what the peer has stored and what the peer has reched adding entries
-        this.commitIndex = Math.min(commitIndex, (index-1));
+        this.commitIndex = Math.min(commitIndex, index);
         //return the index to the first slot free in peer's log
         return index;
 
     }
 
     private ArrayList<LogEntry> getEntriesToSend(ArrayList<LogEntry> logLeader, int lastLogIndex){
-        System.out.println("Sono nella chiamata getEntriesToSend. logLeader.size() = "+logLeader.size()+",  lastLogIndex = "+lastLogIndex+"\n");
+        //System.out.println("Sono nella chiamata getEntriesToSend. logLeader.size() = "+logLeader.size()+",  lastLogIndex = "+lastLogIndex+"\n");
         //lastLogIndex is the index of the last log written by peer
         ArrayList<LogEntry> entries = new ArrayList<>();
-        int start = lastLogIndex;
+        int start = lastLogIndex+1;
         int end = logLeader.size();
-        System.out.println("START = "+start+"  END = "+end);
+        //System.out.println("START = "+start+"  END = "+end);
         for (int i=start; i<end; i++){
             //System.out.println("Sono nel ciclo i="+i);
             entries.add(logLeader.get(i));
