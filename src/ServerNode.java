@@ -137,26 +137,32 @@ public  class ServerNode extends UntypedActor {
         //se sono il leader inizio a ricevere i comandi dal client
         if (message instanceof SendCommand){
             String commandReceived = ((SendCommand) message).command;
-            alreadySent = false;
-            if (getSender().equals(client)){
-                System.out.println("_____________________________________________________NEW COMMAND BY CLIENT: "+commandReceived+"____________________________________________\n");
-                LogEntry newEntry = new LogEntry(currentTerm,commandReceived);
-                log.add(newEntry);
-                this.nextIndex[this.id]= this.nextIndex[this.id]+1;
-                System.out.println("LEADER LOG size "+(this.log.size()-1));
-                for(int i=1; i<this.log.size(); i++){
-                    System.out.println("LEADER LOG entry n. "+i+"   term -> "+this.log.get(i).term+",  command -> "+this.log.get(i).command);
-                }
-                System.out.println("\n");
-                for(ActorRef peer : this.participants){
-                    if(peer!=getSelf()) {
-                        sendAppendEntries(peer);
+            if(commandReceived.equals("FINISH")){
+                System.out.println("\n____________________________________________________IL CLIENT NON HA PIÙ COMANDI__________________________________________________________\n");
+                context().system().shutdown();
+            }else {
+
+                alreadySent = false;
+                if (getSender().equals(client)) {
+                    System.out.println("\n_____________________________________________________NEW COMMAND BY CLIENT: " + commandReceived + "____________________________________________\n");
+                    LogEntry newEntry = new LogEntry(currentTerm, commandReceived);
+                    log.add(newEntry);
+                    this.nextIndex[this.id] = this.nextIndex[this.id] + 1;
+                    System.out.println("LEADER LOG size " + (this.log.size() - 1));
+                    for (int i = 1; i < this.log.size(); i++) {
+                        System.out.println("LEADER LOG entry n. " + i + "   term -> " + this.log.get(i).term + ",  command -> " + this.log.get(i).command);
+                    }
+                    System.out.println("\n");
+                    for (ActorRef peer : this.participants) {
+                        if (peer != getSelf()) {
+                            sendAppendEntries(peer);
+                        }
+
                     }
 
+                } else {
+                    System.out.println("ERROR, sendCommand must be sent by client");
                 }
-
-            }else{
-                System.out.println("ERROR, sendCommand must be sent by client");
             }
 
         }

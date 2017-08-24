@@ -47,6 +47,11 @@ public class Client extends UntypedActor {
             leader.tell(msgSendCommand, getSelf());
             INDEXCOMMAND++;
         }
+        if(INDEXCOMMAND == commandList.length){
+            commandToExecute = "FINISH";
+            SendCommand msgSendCommand = new SendCommand(commandToExecute);
+            leader.tell(msgSendCommand, getSelf());
+        }
 //            if (INDEXCOMMAND == 9){
 //                System.out.println("Valore INDEXCOMMAND "+INDEXCOMMAND);
 //               //go to sleep
