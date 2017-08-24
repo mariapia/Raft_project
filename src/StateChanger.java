@@ -21,6 +21,12 @@ public class StateChanger {
                     node.state = ServerState.LEADER;
                 }
                 break;
+
+            case LEADER:
+                if (node.stepdown == true){
+                    node.state = ServerState.FOLLOWER;
+                }
+                break;
         }
     }
 }

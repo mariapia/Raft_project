@@ -5,7 +5,7 @@ public class HeartBeat {
     public void onReceive (ServerNode node) {
         for (ActorRef q : node.participants) {
             if (q != node.getSelf()) {
-   //             System.out.println("Sono " + this.id + " e sono " + this.state + " ho ricevuto i seguenti voti " + this.votes );
+                //System.out.println("Sono " + node.id + " e sono " + node.state + " ho ricevuto i seguenti voti " );
                 //sendAppendEntries();
             }
         }

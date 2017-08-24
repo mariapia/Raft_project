@@ -26,7 +26,9 @@ public class Raft_configuration {
         }
         group = Collections.unmodifiableList(group);
 
-        StartMessage start = new StartMessage(group);
+        ActorRef client = system.actorOf(Props.create(Client.class, 101), "client_"+101);
+
+        StartMessage start = new StartMessage(group, client);
         for (ActorRef peer : group) {
             peer.tell(start, null);
         }
