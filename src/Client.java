@@ -11,14 +11,14 @@ public class Client extends UntypedActor {
     protected int leaderID = -1;
     ActorRef leader;
 
-    protected String[] commandList = new String[10];
+    protected String[] commandList = new String[3];
     protected int INDEXCOMMAND = 0;
 
     protected Boolean resultCommand = true;
 
     public Client(int id){
         this.id = id;
-        for (int i=0; i<10; i++){
+        for (int i=0; i<3; i++){
             this.commandList[i] = "command_"+i;
         }
 
@@ -38,19 +38,21 @@ public class Client extends UntypedActor {
 
     public void sendCommands(boolean resultCommand){
         String commandToExecute;
-        System.out.println("Valore resultCommand "+resultCommand);
-        while(resultCommand){
-            commandToExecute = getCommand(INDEXCOMMAND);
+        System.out.println();
+        if(resultCommand && INDEXCOMMAND<commandList.length) {
+            //commandToExecute = getCommand(INDEXCOMMAND);
+            commandToExecute = commandList[INDEXCOMMAND];
             SendCommand msgSendCommand = new SendCommand(commandToExecute);
+            System.out.println(" CLIENT -----> ho ricevuto l'OK dal leader. Comando "+msgSendCommand.command);
             leader.tell(msgSendCommand, getSelf());
-            System.out.println("Sono il client e ho inviato il comando"+msgSendCommand.command);
-            if (INDEXCOMMAND == 9){
-                System.out.println("Valore INDEXCOMMAND "+INDEXCOMMAND);
-               //go to sleep
-                resultCommand = false;
-
-            }
+            INDEXCOMMAND++;
         }
+//            if (INDEXCOMMAND == 9){
+//                System.out.println("Valore INDEXCOMMAND "+INDEXCOMMAND);
+//               //go to sleep
+//                resultCommand = false;
+//            }
+        //}
     }
 
     private String getCommand(int indexCommand) {
