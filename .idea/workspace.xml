@@ -2,15 +2,16 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="46cdfad0-5e2f-4059-b0b2-eb1427b7dcfb" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/HeartBeat.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/HeartBeat.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/Raft_configuration.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/Raft_configuration.class" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/out/production/Raft_project/UpdateCommitIndex.class" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/UpdateCommitIndex.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/AppendReply.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/AppendReply.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/Client.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/Client.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/ServerNode$1.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/ServerNode$1.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/ServerNode.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/ServerNode.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/StateChanger$1.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/StateChanger$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/StateChanger.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/StateChanger.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/application.conf" afterPath="$PROJECT_DIR$/out/production/Raft_project/application.conf" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppendReply.java" afterPath="$PROJECT_DIR$/src/AppendReply.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Client.java" afterPath="$PROJECT_DIR$/src/Client.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ServerNode.java" afterPath="$PROJECT_DIR$/src/ServerNode.java" />
     </list>
     <ignored path="Raft_project.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -35,7 +36,7 @@
     <splitter split-orientation="horizontal" split-proportion="0.70576406">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="application.conf" pinned="false" current-in-tab="true">
+          <file leaf-file-name="application.conf" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/src/application.conf">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="414">
@@ -45,12 +46,15 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="ServerNode.java" pinned="false" current-in-tab="false">
+          <file leaf-file-name="ServerNode.java" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/src/ServerNode.java">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="129">
-                  <caret line="255" column="86" selection-start-line="255" selection-start-column="86" selection-end-line="255" selection-end-column="86" />
-                  <folding />
+                <state relative-caret-position="4968">
+                  <caret line="278" column="28" selection-start-line="278" selection-start-column="28" selection-end-line="278" selection-end-column="28" />
+                  <folding>
+                    <element signature="imports" expanded="true" />
+                    <marker date="1503657751845" expanded="false" signature="430:440" ph="&lt;~&gt;" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -61,21 +65,6 @@
                 <state relative-caret-position="540">
                   <caret line="30" column="5" selection-start-line="30" selection-start-column="5" selection-end-line="30" selection-end-column="5" />
                   <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="ServerNode.java" pinned="false" current-in-tab="false">
-            <entry file="file://$USER_HOME$/Scaricati/Telegram Desktop/ServerNode.java">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-2160">
-                  <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-                  <folding>
-                    <element signature="imports" expanded="false" />
-                    <element signature="e#430#440#0" expanded="false" />
-                    <element signature="e#3416#3417#0" expanded="false" />
-                    <element signature="e#3473#3474#0" expanded="false" />
-                  </folding>
                 </state>
               </provider>
             </entry>
@@ -93,15 +82,14 @@
         </leaf>
       </split-first>
       <split-second>
-        <leaf>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file leaf-file-name="ServerNode.java" pinned="false" current-in-tab="false">
             <entry file="file://$USER_HOME$/Scaricati/Telegram Desktop/ServerNode.java">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="18">
+                <state relative-caret-position="936">
                   <caret line="59" column="18" selection-start-line="0" selection-start-column="0" selection-end-line="314" selection-end-column="0" />
                   <folding>
                     <element signature="imports" expanded="false" />
-                    <element signature="e#430#440#0" expanded="false" />
                     <element signature="e#3416#3417#0" expanded="false" />
                     <element signature="e#3473#3474#0" expanded="false" />
                   </folding>
@@ -123,23 +111,6 @@
       </split-second>
     </splitter>
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Class" />
-      </list>
-    </option>
-  </component>
-  <component name="FindInProjectRecents">
-    <findStrings>
-      <find>leader</find>
-      <find>getId</find>
-      <find>participants.size</find>
-      <find>-1</find>
-      <find>matchIndex</find>
-      <find>lastLogIndex</find>
-    </findStrings>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -151,28 +122,7 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/src/PeerServer.java" />
-        <option value="$PROJECT_DIR$/src/Server.java" />
-        <option value="$PROJECT_DIR$/src/LeaderState.java" />
-        <option value="$PROJECT_DIR$/src/CandidateState.java" />
-        <option value="$PROJECT_DIR$/src/FollowerState.java" />
-        <option value="$PROJECT_DIR$/src/ChangeMessageElection.java" />
-        <option value="$PROJECT_DIR$/src/LogEntry.java" />
-        <option value="$PROJECT_DIR$/src/VoteRequest.java" />
-        <option value="$PROJECT_DIR$/src/FollowerMethods.java" />
-        <option value="$PROJECT_DIR$/src/ElectionMessage.java" />
-        <option value="$PROJECT_DIR$/src/application.conf" />
-        <option value="$PROJECT_DIR$/src/StartMessage.java" />
-        <option value="$PROJECT_DIR$/src/SendCommand.java" />
-        <option value="$PROJECT_DIR$/src/InformClient.java" />
-        <option value="$PROJECT_DIR$/src/AppendReply.java" />
-        <option value="$PROJECT_DIR$/src/AppendRequest.java" />
-        <option value="$PROJECT_DIR$/src/Raft_configuration.java" />
-        <option value="$PROJECT_DIR$/src/Client.java" />
-        <option value="$PROJECT_DIR$/src/StateChanger.java" />
-        <option value="$PROJECT_DIR$/src/HeartBeat.java" />
         <option value="$PROJECT_DIR$/src/ServerNode.java" />
-        <option value="$PROJECT_DIR$/src/Debugging.java" />
       </list>
     </option>
   </component>
@@ -182,9 +132,12 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
+  <component name="PhpServers">
+    <servers />
+  </component>
   <component name="PhpWorkspaceProjectConfiguration" backward_compatibility_performed="true" />
   <component name="ProjectFrameBounds">
-    <option name="x" value="55" />
+    <option name="x" value="1975" />
     <option name="y" value="24" />
     <option name="width" value="1865" />
     <option name="height" value="1056" />
@@ -214,7 +167,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="PackagesPane" />
+      <pane id="Scope" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -265,59 +219,35 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Raft_project" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Raft_project" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value=".idea" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
-      <pane id="Scope" />
+      <pane id="PackagesPane" />
       <pane id="AndroidView" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="aspect.path.notification.shown" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$USER_HOME$/Scaricati/Telegram Desktop/ServerNode.java" />
-    <property name="project.structure.last.edited" value="Libraries" />
-    <property name="project.structure.proportion" value="0.0" />
-    <property name="project.structure.side.proportion" value="0.2" />
-  </component>
-  <component name="RecentsManager">
-    <key name="CreateClassDialog.RecentsKey">
-      <recent name="" />
-    </key>
-  </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
   </component>
   <component name="RunManager" selected="Application.Raft_configuration">
-    <configuration default="false" name="Raft_configuration" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" value="Raft_configuration" />
-      <option name="VM_PARAMETERS" />
-      <option name="PROGRAM_PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <option name="ENABLE_SWING_INSPECTOR" value="false" />
-      <option name="ENV_VARIABLES" />
-      <option name="PASS_PARENT_ENVS" value="true" />
-      <module name="Raft_project" />
-      <envs />
-      <method />
-    </configuration>
     <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" factoryName="Plugin">
       <module name="" />
       <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
       <option name="PROGRAM_PARAMETERS" />
-      <predefined_log_file id="idea.log" enabled="true" />
       <method />
     </configuration>
     <configuration default="true" type="AndroidRunConfigurationType" factoryName="Android Application">
@@ -767,14 +697,24 @@
       <envs />
       <method />
     </configuration>
+    <configuration default="false" name="Raft_configuration" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="Raft_configuration" />
+      <option name="VM_PARAMETERS" value="" />
+      <option name="PROGRAM_PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="Raft_project" />
+      <envs />
+      <method />
+    </configuration>
     <list size="1">
       <item index="0" class="java.lang.String" itemvalue="Application.Raft_configuration" />
     </list>
-    <recent_temporary>
-      <list size="1">
-        <item index="0" class="java.lang.String" itemvalue="Application.Raft_configuration" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="SbtLocalSettings">
     <option name="externalProjectsViewState">
@@ -784,31 +724,26 @@
   <component name="ShelveChangesManager" show_recycled="false">
     <option name="remove_strategy" value="false" />
   </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="46cdfad0-5e2f-4059-b0b2-eb1427b7dcfb" name="Default" comment="" />
-      <created>1503135556840</created>
+      <created>1503674320437</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1503135556840</updated>
-      <workItem from="1503135561725" duration="3218000" />
-      <workItem from="1503307360972" duration="2214000" />
-      <workItem from="1503309876148" duration="20103000" />
-      <workItem from="1503397526362" duration="5020000" />
-      <workItem from="1503414123728" duration="42000" />
-      <workItem from="1503414338030" duration="12364000" />
-      <workItem from="1503474995719" duration="26315000" />
-      <workItem from="1503560824417" duration="5777000" />
-      <workItem from="1503570014838" duration="5115000" />
+      <updated>1503674320437</updated>
+      <workItem from="1503674325875" duration="731000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="80168000" />
+    <option name="totallyTimeSpent" value="4164000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="55" y="24" width="1865" height="1056" extended-state="7" />
-    <editor active="false" />
+    <frame x="1975" y="24" width="1865" height="1056" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -818,11 +753,11 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17811158" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.5890558" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32939914" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.12094557" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.12094557" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2497332" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -868,11 +803,13 @@
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="true" content_ui="tabs" />
     </layout-to-restore>
   </component>
-  <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
-  </component>
-  <component name="UnknownFeatures">
-    <option featureType="com.intellij.fileTypeFactory" implementationName="*.conf" />
+  <component name="Vcs.Log.UiProperties">
+    <option name="RECENTLY_FILTERED_USER_GROUPS">
+      <collection />
+    </option>
+    <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
+      <collection />
+    </option>
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
@@ -888,19 +825,14 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/Raft_configuration.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="14" column="37" selection-start-line="14" selection-start-column="37" selection-end-line="14" selection-end-column="37" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/ServerNode.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="72">
           <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <marker date="1503657751845" expanded="false" signature="430:440" ph="&lt;~&gt;" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -949,7 +881,10 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="72">
           <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <marker date="1503657751845" expanded="false" signature="430:440" ph="&lt;~&gt;" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1104,16 +1039,19 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/Scaricati/Telegram Desktop/ServerNode.java">
+    <entry file="file://$PROJECT_DIR$/src/application.conf">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2160">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="imports" expanded="false" />
-            <element signature="e#430#440#0" expanded="false" />
-            <element signature="e#3416#3417#0" expanded="false" />
-            <element signature="e#3473#3474#0" expanded="false" />
-          </folding>
+        <state relative-caret-position="414">
+          <caret line="23" column="16" selection-start-line="23" selection-start-column="16" selection-end-line="23" selection-end-column="16" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/StateChanger.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="540">
+          <caret line="30" column="5" selection-start-line="30" selection-start-column="5" selection-end-line="30" selection-end-column="5" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1125,10 +1063,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/StateChanger.java">
+    <entry file="file://$USER_HOME$/Scaricati/Telegram Desktop/ServerNode.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="30" column="5" selection-start-line="30" selection-start-column="5" selection-end-line="30" selection-end-column="5" />
+        <state relative-caret-position="936">
+          <caret line="59" column="18" selection-start-line="0" selection-start-column="0" selection-end-line="314" selection-end-column="0" />
+          <folding>
+            <element signature="imports" expanded="false" />
+            <element signature="e#3416#3417#0" expanded="false" />
+            <element signature="e#3473#3474#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.idea/workspace.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
@@ -1143,96 +1093,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ServerNode.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="129">
-          <caret line="255" column="86" selection-start-line="255" selection-start-column="86" selection-end-line="255" selection-end-column="86" />
-          <folding />
+        <state relative-caret-position="4968">
+          <caret line="278" column="28" selection-start-line="278" selection-start-column="28" selection-end-line="278" selection-end-column="28" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <marker date="1503657751845" expanded="false" signature="430:440" ph="&lt;~&gt;" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/application.conf">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="414">
-          <caret line="23" column="16" selection-start-line="23" selection-start-column="16" selection-end-line="23" selection-end-column="16" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-  </component>
-  <component name="masterDetails">
-    <states>
-      <state key="ArtifactsStructureConfigurable.UI">
-        <settings>
-          <artifact-editor />
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-      <state key="FacetStructureConfigurable.UI">
-        <settings>
-          <last-edited>No facets are configured</last-edited>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-      <state key="GlobalLibrariesConfigurable.UI">
-        <settings>
-          <last-edited>scala-sdk-2.12.1</last-edited>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-      <state key="JdkListConfigurable.UI">
-        <settings>
-          <last-edited>1.8</last-edited>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-      <state key="ModuleStructureConfigurable.UI">
-        <settings>
-          <last-edited>Raft_project</last-edited>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-                <option value="0.6" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-      <state key="ProjectLibrariesConfigurable.UI">
-        <settings>
-          <last-edited>scala-library-2.11.8</last-edited>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-    </states>
   </component>
 </project>

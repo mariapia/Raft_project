@@ -39,13 +39,18 @@ public class Client extends UntypedActor {
     public void sendCommands(boolean resultCommand){
         String commandToExecute;
         System.out.println();
-        if(resultCommand && INDEXCOMMAND<commandList.length) {
+        if(INDEXCOMMAND<commandList.length) {
             //commandToExecute = getCommand(INDEXCOMMAND);
             commandToExecute = commandList[INDEXCOMMAND];
             SendCommand msgSendCommand = new SendCommand(commandToExecute);
             System.out.println(" CLIENT -----> ho ricevuto l'OK dal leader. Comando "+msgSendCommand.command);
             leader.tell(msgSendCommand, getSelf());
             INDEXCOMMAND++;
+        }
+        if(INDEXCOMMAND == commandList.length){
+            commandToExecute = "FINISH";
+            SendCommand msgSendCommand = new SendCommand(commandToExecute);
+            leader.tell(msgSendCommand, getSelf());
         }
 //            if (INDEXCOMMAND == 9){
 //                System.out.println("Valore INDEXCOMMAND "+INDEXCOMMAND);
