@@ -2,15 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="46cdfad0-5e2f-4059-b0b2-eb1427b7dcfb" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/out/production/Raft_project/UpdateCommitIndex.class" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/UpdateCommitIndex.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/AppendReply.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/AppendReply.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/Client.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/Client.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/ServerNode$1.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/ServerNode$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Raft_project/ServerNode.class" afterPath="$PROJECT_DIR$/out/production/Raft_project/ServerNode.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/AppendReply.java" afterPath="$PROJECT_DIR$/src/AppendReply.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Client.java" afterPath="$PROJECT_DIR$/src/Client.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/HeartBeat.java" afterPath="$PROJECT_DIR$/src/HeartBeat.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ServerNode.java" afterPath="$PROJECT_DIR$/src/ServerNode.java" />
     </list>
     <ignored path="Raft_project.iws" />
@@ -33,83 +25,86 @@
     <favorites_list name="Raft_project" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.70576406">
-      <split-first>
-        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="application.conf" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/application.conf">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="414">
-                  <caret line="23" column="16" selection-start-line="23" selection-start-column="16" selection-end-line="23" selection-end-column="16" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="ServerNode.java" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/src/ServerNode.java">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="4968">
-                  <caret line="278" column="28" selection-start-line="278" selection-start-column="28" selection-end-line="278" selection-end-column="28" />
-                  <folding>
-                    <element signature="imports" expanded="true" />
-                    <marker date="1503657751845" expanded="false" signature="430:440" ph="&lt;~&gt;" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="StateChanger.java" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/StateChanger.java">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="540">
-                  <caret line="30" column="5" selection-start-line="30" selection-start-column="5" selection-end-line="30" selection-end-column="5" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="HeartBeat.java" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/HeartBeat.java">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="126">
-                  <caret line="7" column="18" selection-start-line="7" selection-start-column="18" selection-end-line="7" selection-end-column="18" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-        </leaf>
-      </split-first>
-      <split-second>
-        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="ServerNode.java" pinned="false" current-in-tab="false">
-            <entry file="file://$USER_HOME$/Scaricati/Telegram Desktop/ServerNode.java">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="936">
-                  <caret line="59" column="18" selection-start-line="0" selection-start-column="0" selection-end-line="314" selection-end-column="0" />
-                  <folding>
-                    <element signature="imports" expanded="false" />
-                    <element signature="e#3416#3417#0" expanded="false" />
-                    <element signature="e#3473#3474#0" expanded="false" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="Debugging.java" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/src/Debugging.java">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="108">
-                  <caret line="6" column="171" selection-start-line="6" selection-start-column="171" selection-end-line="6" selection-end-column="171" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-        </leaf>
-      </split-second>
-    </splitter>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="application.conf" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/application.conf">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="414">
+              <caret line="23" column="16" selection-start-line="23" selection-start-column="16" selection-end-line="23" selection-end-column="16" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ServerNode.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/ServerNode.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="363">
+              <caret line="440" column="46" selection-start-line="440" selection-start-column="46" selection-end-line="440" selection-end-column="46" />
+              <folding>
+                <element signature="imports" expanded="true" />
+                <element signature="method#stepDown#0;class#ServerNode#0" expanded="false" />
+                <element signature="method#leader#0;class#ServerNode#0" expanded="false" />
+                <element signature="e#11109#11182#0" expanded="false" />
+                <element signature="method#follower#0;class#ServerNode#0" expanded="false" />
+                <element signature="method#sendAppendEntries#0;class#ServerNode#0" expanded="false" />
+                <element signature="method#checkMajorityReply#0;class#ServerNode#0" expanded="false" />
+                <element signature="method#checkMajorityCurrentTerm#0;class#ServerNode#0" expanded="false" />
+                <element signature="method#storeEntries#0;class#ServerNode#0" expanded="false" />
+                <element signature="method#getEntriesToSend#0;class#ServerNode#0" expanded="false" />
+                <element signature="method#getLastLogIndex#0;class#ServerNode#0" expanded="false" />
+                <element signature="method#getLastLogTerm#0;class#ServerNode#0" expanded="false" />
+                <element signature="method#getLastLogIndex#1;class#ServerNode#0" expanded="false" />
+                <element signature="method#returnIdPeer#0;class#ServerNode#0" expanded="false" />
+                <marker date="1503680288529" expanded="false" signature="430:440" ph="&lt;~&gt;" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AppendReply.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/AppendReply.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="162">
+              <caret line="9" column="33" selection-start-line="9" selection-start-column="33" selection-end-line="9" selection-end-column="33" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="StateChanger.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/StateChanger.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="540">
+              <caret line="30" column="5" selection-start-line="30" selection-start-column="5" selection-end-line="30" selection-end-column="5" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="HeartBeat.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/HeartBeat.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="234">
+              <caret line="13" column="100" selection-start-line="13" selection-start-column="100" selection-end-line="13" selection-end-column="100" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AppendRequest.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/AppendRequest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="180">
+              <caret line="13" column="38" selection-start-line="13" selection-start-column="38" selection-end-line="13" selection-end-column="38" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -122,6 +117,7 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
+        <option value="$PROJECT_DIR$/src/HeartBeat.java" />
         <option value="$PROJECT_DIR$/src/ServerNode.java" />
       </list>
     </option>
@@ -734,16 +730,16 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1503674320437</updated>
-      <workItem from="1503674325875" duration="731000" />
+      <workItem from="1503674325875" duration="5533000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="4164000" />
+    <option name="totallyTimeSpent" value="8966000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1975" y="24" width="1865" height="1056" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -753,14 +749,15 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.5890558" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18025751" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32939914" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.12094557" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.12094557" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32939914" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2497332" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.0" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -770,7 +767,6 @@
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32939914" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
@@ -816,7 +812,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="2" />
+      <option name="time" value="4" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -831,7 +827,20 @@
           <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
-            <marker date="1503657751845" expanded="false" signature="430:440" ph="&lt;~&gt;" />
+            <element signature="method#stepDown#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#leader#0;class#ServerNode#0" expanded="false" />
+            <element signature="e#11109#11182#0" expanded="false" />
+            <element signature="method#follower#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#sendAppendEntries#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#checkMajorityReply#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#checkMajorityCurrentTerm#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#storeEntries#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#getEntriesToSend#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#getLastLogIndex#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#getLastLogTerm#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#getLastLogIndex#1;class#ServerNode#0" expanded="false" />
+            <element signature="method#returnIdPeer#0;class#ServerNode#0" expanded="false" />
+            <marker date="1503680288529" expanded="false" signature="430:440" ph="&lt;~&gt;" />
           </folding>
         </state>
       </provider>
@@ -883,7 +892,20 @@
           <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
-            <marker date="1503657751845" expanded="false" signature="430:440" ph="&lt;~&gt;" />
+            <element signature="method#stepDown#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#leader#0;class#ServerNode#0" expanded="false" />
+            <element signature="e#11109#11182#0" expanded="false" />
+            <element signature="method#follower#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#sendAppendEntries#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#checkMajorityReply#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#checkMajorityCurrentTerm#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#storeEntries#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#getEntriesToSend#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#getLastLogIndex#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#getLastLogTerm#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#getLastLogIndex#1;class#ServerNode#0" expanded="false" />
+            <element signature="method#returnIdPeer#0;class#ServerNode#0" expanded="false" />
+            <marker date="1503680288529" expanded="false" signature="430:440" ph="&lt;~&gt;" />
           </folding>
         </state>
       </provider>
@@ -986,14 +1008,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/AppendRequest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="13" column="38" selection-start-line="13" selection-start-column="38" selection-end-line="13" selection-end-column="38" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/Client.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="558">
@@ -1012,14 +1026,6 @@
             <element signature="e#153#154#0" expanded="false" />
             <element signature="e#191#192#0" expanded="false" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/AppendReply.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="162">
-          <caret line="9" column="33" selection-start-line="9" selection-start-column="33" selection-end-line="9" selection-end-column="33" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1055,26 +1061,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/HeartBeat.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="126">
-          <caret line="7" column="18" selection-start-line="7" selection-start-column="18" selection-end-line="7" selection-end-column="18" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Scaricati/Telegram Desktop/ServerNode.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="936">
-          <caret line="59" column="18" selection-start-line="0" selection-start-column="0" selection-end-line="314" selection-end-column="0" />
-          <folding>
-            <element signature="imports" expanded="false" />
-            <element signature="e#3416#3417#0" expanded="false" />
-            <element signature="e#3473#3474#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.idea/workspace.xml">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -1091,13 +1077,60 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/ServerNode.java">
+    <entry file="file://$USER_HOME$/Scaricati/Telegram Desktop/ServerNode.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4968">
-          <caret line="278" column="28" selection-start-line="278" selection-start-column="28" selection-end-line="278" selection-end-column="28" />
+        <state relative-caret-position="634">
+          <caret line="59" column="18" selection-start-line="0" selection-start-column="0" selection-end-line="314" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/AppendRequest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="13" column="38" selection-start-line="13" selection-start-column="38" selection-end-line="13" selection-end-column="38" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/HeartBeat.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="234">
+          <caret line="13" column="100" selection-start-line="13" selection-start-column="100" selection-end-line="13" selection-end-column="100" />
           <folding>
             <element signature="imports" expanded="true" />
-            <marker date="1503657751845" expanded="false" signature="430:440" ph="&lt;~&gt;" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/AppendReply.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="162">
+          <caret line="9" column="33" selection-start-line="9" selection-start-column="33" selection-end-line="9" selection-end-column="33" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ServerNode.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="363">
+          <caret line="440" column="46" selection-start-line="440" selection-start-column="46" selection-end-line="440" selection-end-column="46" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="method#stepDown#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#leader#0;class#ServerNode#0" expanded="false" />
+            <element signature="e#11109#11182#0" expanded="false" />
+            <element signature="method#follower#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#sendAppendEntries#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#checkMajorityReply#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#checkMajorityCurrentTerm#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#storeEntries#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#getEntriesToSend#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#getLastLogIndex#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#getLastLogTerm#0;class#ServerNode#0" expanded="false" />
+            <element signature="method#getLastLogIndex#1;class#ServerNode#0" expanded="false" />
+            <element signature="method#returnIdPeer#0;class#ServerNode#0" expanded="false" />
+            <marker date="1503680288529" expanded="false" signature="430:440" ph="&lt;~&gt;" />
           </folding>
         </state>
       </provider>

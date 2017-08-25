@@ -20,7 +20,7 @@ public  class ServerNode extends UntypedActor {
     //variables in Non-Persistent State
     protected ServerState state;
     protected Integer leaderID;
-    private int commitIndex;
+    protected int commitIndex;
     private Integer [] nextIndex = new Integer[config.getInt("N_SERVER")];
     private Integer[] matchIndex = new Integer[config.getInt("N_SERVER")];
     private ActorRef client;
@@ -83,7 +83,6 @@ public  class ServerNode extends UntypedActor {
                     this.participants.add(msg.group.get(i));
 
                 }
-
             } catch (Throwable e) {
                 System.out.println(e.getStackTrace());
             }
@@ -112,18 +111,16 @@ public  class ServerNode extends UntypedActor {
         }
     }
 
-    public void startElection(int id){
-        int idSender = id;
-        System.out.println("Start election for node " +idSender);
+//    public void startElection(int id){
+//        int idSender = id;
+//        System.out.println("Start election for node " +idSender);
+//    }
 
+//    public void sendAppendEntries(){
+        //System.out.println("Invio AppendEntries");
+//    }
 
-    }
-
-    public void sendAppendEntries(){
-        System.out.println("Invio AppendEntries");
-    }
-
-    public void handleAppendRequest(AppendRequest message){}
+//    public void handleAppendRequest(AppendRequest message){}
 
     public void stepDown(int term){
         this.currentTerm = term;
@@ -156,6 +153,68 @@ public  class ServerNode extends UntypedActor {
 //                    //sendAppendEntries();
 //                }
 //            }
+            if (message instanceof AppendRequest) {
+                System.out.println("PEER " + this.id + "---> Ho ricevuto un AppendRequest");
+                int termReceived = ((AppendRequest) message).term;
+                int prevIndexReceived = ((AppendRequest) message).prevIndex;
+                int prevTermReceived = ((AppendRequest) message).prevTerm;
+                ArrayList<LogEntry> entriesReceived = ((AppendRequest) message).entries;
+                int commitIndexReceived = ((AppendRequest) message).commitIndex;
+
+                boolean success = false;
+
+                if (termReceived > this.currentTerm) {
+                    System.out.println("STEPDOWN()");
+                    stepDown(termReceived);
+                } else if (termReceived < this.currentTerm) {
+                    System.out.println("success = FALSE, invio risposta al leader");
+                    success = false;
+                    int lastTermSaved = this.log.get(this.indexStories - 1).term;
+                    AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved);
+                    getSender().tell(response, getSelf());
+
+                }
+                this.leaderID = ((AppendRequest) message).leaderId;
+                if (entriesReceived.isEmpty()){
+                    if (electionScheduler != null && !electionScheduler.isCancelled())
+                        electionScheduler.cancel();
+
+                    int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
+                    electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
+
+                    System.out.println("Ho ricevuto un HEARTBEAT da " + this.getSender().path().name() + " mando un ACK. Sono " + this.id + " stato:" + this.state);
+
+                    success = true;
+                    AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -2, -2);
+
+                    this.getSender().tell(appRepMessage, this.getSelf());
+                    return;
+                }
+
+                this.indexStories = 0;
+
+                if (prevIndexReceived == 0) {
+                    success = true;
+                } else if (prevIndexReceived <= this.log.size() && this.log.get(prevIndexReceived).term == prevTermReceived) {
+                    success = true;
+                }
+                if (success) {
+                    System.out.println("PEER " + this.id + " ---> ho avuto successo\n");
+                    this.indexStories = storeEntries(prevIndexReceived, entriesReceived, commitIndexReceived);
+                    //System.out.println("NODE "+this.id+"_______indexStories after ____"+this.indexStories);
+                    for (int i = 1; i < this.log.size(); i++) {
+                        System.out.println("LOG NODE " + this.id + " n_elements " + (this.log.size() - 1) + " -----> command: " + log.get(i).command + ",  term: " + log.get(i).term);
+                    }
+                    System.out.println("\n");
+                    int lastTermSaved = this.log.get(this.indexStories).term;
+                    AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved);
+                    System.out.println("PEER " + this.id + " --> invio di AppendReply al leader\n");
+                    getSender().tell(response, getSelf());
+                } else {
+                    //commit non andato a buon fine
+                    AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -1, -1);
+                }
+            }
         }
         if (message instanceof VoteRequest) {
             System.out.println("Sono " + this.id + " ho ricevuto una VoteRequest da " + ((VoteRequest) message).senderID);
@@ -229,14 +288,23 @@ public  class ServerNode extends UntypedActor {
 
             System.out.println("LEADER ---> ricevuto AppendReply da PEER " + senderID + "\n");
 
-            getReply[this.id] = true;
-            termsPeers[this.id] = this.log.get(nextIndex[this.id] - 1).term;
-            termsPeers[senderID] = lastTermSavedPeer;
+            if (lastTermSavedPeer != -2) {
+                getReply[this.id] = true;
+                termsPeers[this.id] = this.log.get(nextIndex[this.id] - 1).term;
+                termsPeers[senderID] = lastTermSavedPeer;
+            }
 
             if (termReceived > this.currentTerm) {
                 System.out.println("\nterm received greater than currentTerm\n");
                 stepDown(termReceived);
-            } else if (termReceived == this.currentTerm) {
+            }
+            if (this.state != ServerState.LEADER || lastTermSavedPeer == -2) {
+                //Ricevo un ACK di un heartbeat
+                System.out.println("Sono " + this.id + " stato " + this.state + " e ho ricevuto un ACK di heartbeat da " + ((AppendReply) message).senderID);
+                return;
+            }
+
+            if (termReceived == this.currentTerm) {
                 if (successReceived) {
                     System.out.println("\nreceived success by peer " + senderID + "\n");
                     //update information about next free slot for peer's log
@@ -349,9 +417,72 @@ public  class ServerNode extends UntypedActor {
                 }
 
             }
+        } else if (message instanceof AppendRequest) {
+            System.out.println("PEER " + this.id + "---> Ho ricevuto un AppendRequest");
+            int termReceived = ((AppendRequest) message).term;
+            int prevIndexReceived = ((AppendRequest) message).prevIndex;
+            int prevTermReceived = ((AppendRequest) message).prevTerm;
+            ArrayList<LogEntry> entriesReceived = ((AppendRequest) message).entries;
+            int commitIndexReceived = ((AppendRequest) message).commitIndex;
+
+            boolean success = false;
+
+            if (termReceived > this.currentTerm) {
+                System.out.println("STEPDOWN()");
+                stepDown(termReceived);
+            } else if (termReceived < this.currentTerm) {
+                System.out.println("success = FALSE, invio risposta al leader");
+                success = false;
+                int lastTermSaved = this.log.get(this.indexStories - 1).term;
+                AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved);
+                getSender().tell(response, getSelf());
+
+            }
+            this.state = ServerState.FOLLOWER;
+            this.leaderID = ((AppendRequest) message).leaderId;
+            if (entriesReceived.isEmpty()){
+                if (electionScheduler != null && !electionScheduler.isCancelled())
+                    electionScheduler.cancel();
+
+                int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
+                electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
+
+                System.out.println("Ho ricevuto un HEARTBEAT da " + this.getSender().path().name() + " mando un ACK. Sono " + this.id + " stato:" + this.state);
+
+                success = true;
+                AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -2, -2);
+
+                this.getSender().tell(appRepMessage, this.getSelf());
+                return;
+            }
+
+            this.indexStories = 0;
+
+            if (prevIndexReceived == 0) {
+                success = true;
+            } else if (prevIndexReceived <= this.log.size() && this.log.get(prevIndexReceived).term == prevTermReceived) {
+                success = true;
+            }
+            if (success) {
+                System.out.println("PEER " + this.id + " ---> ho avuto successo\n");
+                this.indexStories = storeEntries(prevIndexReceived, entriesReceived, commitIndexReceived);
+                //System.out.println("NODE "+this.id+"_______indexStories after ____"+this.indexStories);
+                for (int i = 1; i < this.log.size(); i++) {
+                    System.out.println("LOG NODE " + this.id + " n_elements " + (this.log.size() - 1) + " -----> command: " + log.get(i).command + ",  term: " + log.get(i).term);
+                }
+                System.out.println("\n");
+                int lastTermSaved = this.log.get(this.indexStories).term;
+                AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved);
+                System.out.println("PEER " + this.id + " --> invio di AppendReply al leader\n");
+                getSender().tell(response, getSelf());
+            } else {
+                //commit non andato a buon fine
+                AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -1, -1);
+            }
         }
 
     }
+
     private void follower(Object message) {
         if (electionScheduler != null && !electionScheduler.isCancelled())
             electionScheduler.cancel();
@@ -393,9 +524,6 @@ public  class ServerNode extends UntypedActor {
                 stepDown(((VoteReply) message).term);
             }
         }
-
-        //TODO
-        //else if (message instanceof ...)
         if (message instanceof AppendRequest) {
             System.out.println("PEER " + this.id + "---> Ho ricevuto un AppendRequest");
             int termReceived = ((AppendRequest) message).term;
@@ -415,27 +543,46 @@ public  class ServerNode extends UntypedActor {
                 int lastTermSaved = this.log.get(this.indexStories - 1).term;
                 AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved);
                 getSender().tell(response, getSelf());
-            } else {
-                this.indexStories = 0;
-                if (prevIndexReceived == 0) {
-                    success = true;
-                } else if (this.log.get(prevIndexReceived).term == prevTermReceived) {
-                    success = true;
-                }
-                if (success) {
-                    System.out.println("PEER " + this.id + " ---> ho avuto successo\n");
-                    this.indexStories = storeEntries(prevIndexReceived, entriesReceived, commitIndexReceived);
-                    //System.out.println("NODE "+this.id+"_______indexStories after ____"+this.indexStories);
-                    for (int i = 1; i < this.log.size(); i++) {
-                        System.out.println("LOG NODE " + this.id + " n_elements " + (this.log.size() - 1) + " -----> command: " + log.get(i).command + ",  term: " + log.get(i).term);
-                    }
-                    System.out.println("\n");
-                    int lastTermSaved = this.log.get(this.indexStories).term;
-                    AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved);
-                    System.out.println("PEER " + this.id + " --> invio di AppendReply al leader\n");
-                    getSender().tell(response, getSelf());
 
+            }
+            this.leaderID = ((AppendRequest) message).leaderId;
+            if (entriesReceived.isEmpty()){
+                if (electionScheduler != null && !electionScheduler.isCancelled())
+                    electionScheduler.cancel();
+
+                int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
+                electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
+
+                System.out.println("Ho ricevuto un HEARTBEAT da " + this.getSender().path().name() + " mando un ACK. Sono " + this.id + " stato:" + this.state);
+                success = true;
+                AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -2, -2);
+
+                this.getSender().tell(appRepMessage, this.getSelf());
+                return;
+            }
+
+            this.indexStories = 0;
+
+            if (prevIndexReceived == 0) {
+                success = true;
+            } else if (prevIndexReceived <= this.log.size() && this.log.get(prevIndexReceived).term == prevTermReceived) {
+                success = true;
+            }
+            if (success) {
+                System.out.println("PEER " + this.id + " ---> ho avuto successo\n");
+                this.indexStories = storeEntries(prevIndexReceived, entriesReceived, commitIndexReceived);
+                //System.out.println("NODE "+this.id+"_______indexStories after ____"+this.indexStories);
+                for (int i = 1; i < this.log.size(); i++) {
+                    System.out.println("LOG NODE " + this.id + " n_elements " + (this.log.size() - 1) + " -----> command: " + log.get(i).command + ",  term: " + log.get(i).term);
                 }
+                System.out.println("\n");
+                int lastTermSaved = this.log.get(this.indexStories).term;
+                AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved);
+                System.out.println("PEER " + this.id + " --> invio di AppendReply al leader\n");
+                getSender().tell(response, getSelf());
+            } else {
+                //commit non andato a buon fine
+                AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -1, -1);
             }
         }
         if(message instanceof UpdateCommitIndex){
@@ -469,7 +616,6 @@ public  class ServerNode extends UntypedActor {
 
 
     }
-
 
     private boolean checkMajorityReply(boolean[] getReply){
         int n_true=0;
@@ -570,8 +716,7 @@ public  class ServerNode extends UntypedActor {
         }
     }
 
-    public int getLastLogIndex(ArrayList<LogEntry> log)
-    {
+    public int getLastLogIndex(ArrayList<LogEntry> log) {
         if(log.size() <=0)
         {
             return 0;
