@@ -59,10 +59,10 @@ public class Client extends UntypedActor {
 //            }
         //}
     }
-
-    private String getCommand(int indexCommand) {
-        String res = commandList[indexCommand];
-        INDEXCOMMAND = (indexCommand + 1) % commandList.length;
-        return res;
-    }
+//
+//    private String getCommand(int indexCommand) {
+//        String res = commandList[indexCommand];
+//        INDEXCOMMAND = (indexCommand + 1) % commandList.length;
+//        return res;
+//    }
 }

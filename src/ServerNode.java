@@ -35,6 +35,8 @@ public  class ServerNode extends UntypedActor {
     private Cancellable debugging;
     private Cancellable heartbeatScheduler;
 
+    private Cancellable commandScheduler;
+
     protected boolean stepdown;
 
     private int receivedVote;
@@ -45,9 +47,10 @@ public  class ServerNode extends UntypedActor {
     private int[] termsPeers = new int[config.getInt("N_SERVER")];
     private boolean alreadySent = false;
 
+    private List<Integer> responseReceived = new ArrayList<>();
 
-    //indice di controllo per debug, TODO: da rimuovere
-    private int contatoreNumeroReplyRicevute =0;
+
+
     public ServerNode(int id){
         super();
         this.id = id;
@@ -74,10 +77,11 @@ public  class ServerNode extends UntypedActor {
 
     @Override
     public void onReceive(Object message) throws Throwable{
-        System.out.println("Sono " + this.id + " messaggio di tipo " + message.getClass().getName());
+        //System.out.println("Sono " + this.id + " messaggio di tipo " + message.getClass().getName());
         if (message instanceof StartMessage) {
             debugging = getContext().system().scheduler().schedule(Duration.Zero(),Duration.create(1000, TimeUnit.MILLISECONDS), getSelf(), new Debugging(), getContext().system().dispatcher(), getSelf());
             StartMessage msg = (StartMessage) message;
+            client = msg.client;
             try {
                 for (int i = 0; i < msg.group.size(); i++) {
                     this.participants.add(msg.group.get(i));
@@ -86,6 +90,7 @@ public  class ServerNode extends UntypedActor {
             } catch (Throwable e) {
                 System.out.println(e.getStackTrace());
             }
+
         }
 
         if (message instanceof StateChanger) {
@@ -146,7 +151,10 @@ public  class ServerNode extends UntypedActor {
             }
 
             heartbeatScheduler = getContext().system().scheduler().schedule(Duration.Zero(), Duration.create(config.getInt("HEARTBEAT_TIMEOUT"), TimeUnit.MILLISECONDS), getSelf(), new HeartBeat(), getContext().system().dispatcher(), getSelf());
-
+            if (this.state == ServerState.LEADER) {
+                InformClient tmp = new InformClient(this.id, true);
+                client.tell(tmp, getSelf());
+            }
 //            for (ActorRef q : participants) {
 //                if (q != getSelf()) {
 //                    System.out.println("Sono " + this.id + " e sono " + this.state + " ho ricevuto i seguenti voti " + this.votes );
@@ -182,7 +190,7 @@ public  class ServerNode extends UntypedActor {
                     int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
                     electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
 
-                    System.out.println("Ho ricevuto un HEARTBEAT da " + this.getSender().path().name() + " mando un ACK. Sono " + this.id + " stato:" + this.state);
+                    //System.out.println("Ho ricevuto un HEARTBEAT da " + this.getSender().path().name() + " mando un ACK. Sono " + this.id + " stato:" + this.state);
 
                     success = true;
                     AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -2, -2);
@@ -217,7 +225,7 @@ public  class ServerNode extends UntypedActor {
             }
         }
         if (message instanceof VoteRequest) {
-            System.out.println("Sono " + this.id + " ho ricevuto una VoteRequest da " + ((VoteRequest) message).senderID);
+            //System.out.println("Sono " + this.id + " ho ricevuto una VoteRequest da " + ((VoteRequest) message).senderID);
             if (((VoteRequest) message).currentTerm > currentTerm) {
                 stepDown(((VoteRequest) message).currentTerm);
             }
@@ -251,11 +259,13 @@ public  class ServerNode extends UntypedActor {
         //se sono il leader inizio a ricevere i comandi dal client
         if (message instanceof SendCommand) {
             String commandReceived = ((SendCommand) message).command;
+
             if (commandReceived.equals("FINISH")) {
                 System.out.println("\n____________________________________________________IL CLIENT NON HA PIÙ COMANDI__________________________________________________________\n");
                 context().system().shutdown();
             } else {
                 alreadySent = false;
+                responseReceived.clear();
                 if (getSender().equals(client)) {
                     System.out.println("\n_____________________________________________________NEW COMMAND BY CLIENT: " + commandReceived + "____________________________________________\n");
                     LogEntry newEntry = new LogEntry(currentTerm, commandReceived);
@@ -285,6 +295,7 @@ public  class ServerNode extends UntypedActor {
             int indexStoriesReceived = ((AppendReply) message).indexStories;
             int senderID = ((AppendReply) message).senderID;
             int lastTermSavedPeer = ((AppendReply) message).lastTermSaved;
+            //responseReceivd.add(senderID);
 
             System.out.println("LEADER ---> ricevuto AppendReply da PEER " + senderID + "\n");
 
@@ -292,6 +303,7 @@ public  class ServerNode extends UntypedActor {
                 getReply[this.id] = true;
                 termsPeers[this.id] = this.log.get(nextIndex[this.id] - 1).term;
                 termsPeers[senderID] = lastTermSavedPeer;
+                responseReceived.add(senderID);
             }
 
             if (termReceived > this.currentTerm) {
@@ -300,7 +312,7 @@ public  class ServerNode extends UntypedActor {
             }
             if (this.state != ServerState.LEADER || lastTermSavedPeer == -2) {
                 //Ricevo un ACK di un heartbeat
-                System.out.println("Sono " + this.id + " stato " + this.state + " e ho ricevuto un ACK di heartbeat da " + ((AppendReply) message).senderID);
+                //System.out.println("Sono " + this.id + " stato " + this.state + " e ho ricevuto un ACK di heartbeat da " + ((AppendReply) message).senderID);
                 return;
             }
 
@@ -324,28 +336,36 @@ public  class ServerNode extends UntypedActor {
 //                    sendAppendEntries(getSender());
 //                }
             }
-
-            if (checkMajorityReply(getReply) && checkMajorityCurrentTerm(this.currentTerm, termsPeers)) {
-                System.out.println("\nin DOUBLE CHECK\n");
-                Boolean commandCommited = true;
-                InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
-                this.commitIndex++;
-                if (!alreadySent) {
-                    System.out.println("LEADER ----> Il comando può essere committato. Il client viene informato");
-                    client.tell(resultCommand, getSelf());
-                    alreadySent = true;
-                    UpdateCommitIndex update = new UpdateCommitIndex(true);
-                    for (ActorRef peer : this.participants) {
-                        if (peer != getSelf()) {
-                            //peer.tell(update, getSelf());
+            if((responseReceived.size()-1) == config.getInt("N_SERVER")){
+                if (checkMajorityReply(getReply) && checkMajorityCurrentTerm(this.currentTerm, termsPeers)) {
+                    //System.out.println("\nin DOUBLE CHECK\n");
+                    Boolean commandCommited = true;
+                    InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
+                    this.commitIndex++;
+                    if (!alreadySent) {
+                        System.out.println("LEADER ----> Il comando può essere committato. Il client viene informato");
+                        client.tell(resultCommand, getSelf());
+                        alreadySent = true;
+                        UpdateCommitIndex update = new UpdateCommitIndex(true);
+                        for (ActorRef peer : this.participants) {
+                            if (peer != getSelf()) {
+                                peer.tell(update, getSelf());
+                            }
                         }
                     }
+                }else{
+//                    Boolean commandCommited = false;
+//                    InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
+//                    client.tell(resultCommand, getSelf());
                 }
-            } else {
-                Boolean commandCommited = false;
-                InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
-                //client.tell(resultCommand, getSelf());
+            }else{
+                //TODO: wait expiration of timeout
             }
+//            } else {
+//                Boolean commandCommited = false;
+//                InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
+//                //client.tell(resultCommand, getSelf());
+//            }
             if (alreadySent) {
                 for (int i = 0; i < getReply.length; i++) {
                     getReply[i] = false;
@@ -378,7 +398,6 @@ public  class ServerNode extends UntypedActor {
 
             for (ActorRef q : participants) {
                 if (q != getSelf()) {
-                    //System.out.println("Sono " + this.id + " o meglio " + ((String)this.getSelf().path().name()).charAt(5) + " sto mandando una vote request a " + q.path());
                     q.tell(new VoteRequest(this.id, this.currentTerm, lastLogIndex, lastLogTerm), getSelf());
                 }
             }
@@ -402,7 +421,7 @@ public  class ServerNode extends UntypedActor {
                 this.getSender().tell(new VoteReply(votedFor, currentTerm, this.id), getSelf());
             }
         } else if (message instanceof VoteReply) {
-            System.out.println("Ho ricevuto un voteReply da " + ((VoteReply) message).senderID);
+            //System.out.println("Ho ricevuto un voteReply da " + ((VoteReply) message).senderID);
             if (((VoteReply) message).term > this.currentTerm) {
                 stepDown(((VoteReply) message).term);
             }
@@ -447,7 +466,7 @@ public  class ServerNode extends UntypedActor {
                 int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
                 electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
 
-                System.out.println("Ho ricevuto un HEARTBEAT da " + this.getSender().path().name() + " mando un ACK. Sono " + this.id + " stato:" + this.state);
+                //System.out.println("Ho ricevuto un HEARTBEAT da " + this.getSender().path().name() + " mando un ACK. Sono " + this.id + " stato:" + this.state);
 
                 success = true;
                 AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -2, -2);
@@ -492,13 +511,13 @@ public  class ServerNode extends UntypedActor {
         if (message instanceof StartMessage || message instanceof StateChanger || message instanceof ElectionMessage) {
             this.stepdown = false;
             int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
-            System.out.println("Sono " + this.id + " ho settato il timeout a " + electionTimeout);
+            //System.out.println("Sono " + this.id + " ho settato il timeout a " + electionTimeout);
             //scheduling of message to change state
             electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new StateChanger(), getContext().system().dispatcher(), getSelf());
             //System.out.println("NODO : " + this.id + " stepdown: " + this.stepdown + " stato: " + this.state);
         }
         else if (message instanceof VoteRequest) {
-            System.out.println("Sono " + this.id+ " ho ricevuto una VoteRequest da " + ((VoteRequest) message).senderID);
+            //System.out.println("Sono " + this.id+ " ho ricevuto una VoteRequest da " + ((VoteRequest) message).senderID);
             if (((VoteRequest) message).currentTerm > currentTerm) {
                 stepDown(((VoteRequest) message).currentTerm);
             }
@@ -507,7 +526,7 @@ public  class ServerNode extends UntypedActor {
                     (((VoteRequest) message).lastLogTerm > getLastLogTerm(log.size()-1) || (((VoteRequest) message).lastLogTerm == getLastLogTerm(log.size()-1) && ((VoteRequest) message).lastLogIndex >= getLastLogIndex())
                     )) {
                 this.votedFor = ((VoteRequest) message).senderID;
-                System.out.println("Sono " + this.id + " ho votato per " + this.votedFor);
+                //System.out.println("Sono " + this.id + " ho votato per " + this.votedFor);
 
 
                 int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
@@ -553,7 +572,7 @@ public  class ServerNode extends UntypedActor {
                 int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
                 electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
 
-                System.out.println("Ho ricevuto un HEARTBEAT da " + this.getSender().path().name() + " mando un ACK. Sono " + this.id + " stato:" + this.state);
+                //System.out.println("Ho ricevuto un HEARTBEAT da " + this.getSender().path().name() + " mando un ACK. Sono " + this.id + " stato:" + this.state);
                 success = true;
                 AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -2, -2);
 
@@ -596,7 +615,10 @@ public  class ServerNode extends UntypedActor {
 
     private void sendAppendEntries(ActorRef peer){
         ActorRef leader = getSender();
-        float timeoutSendAppendEntries = System.currentTimeMillis() + ((config.getInt("MAX_TIMEOUT")-config.getInt("MAX_TIMEOUT"))/2);
+        //TODO: implement timeout for entries
+        long timeoutSendAppendEntries = System.currentTimeMillis() + ((config.getInt("MAX_TIMEOUT")-config.getInt("MIN_TIMEOUT"))/2);
+        //commandScheduler=getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(timeoutSendAppendEntries, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
+
         int id_peer = returnIdPeer(peer);
         System.out.println("PEER ID ------>  "+id_peer+"\n");
 //        for(int i=0; i<config.getInt("N_SERVER"); i++){
@@ -729,7 +751,7 @@ public  class ServerNode extends UntypedActor {
     public int returnIdPeer(ActorRef peer){
         String name = peer.path().name();
         String[] tokens = name.split("_");
-        int idPeer = Integer.parseInt(tokens[1])-1 ;
+        int idPeer = Integer.parseInt(tokens[1]);
         //System.out.println("name peer "+name+"   idPeer "+idPeer+"\n");
         return idPeer;
     }
