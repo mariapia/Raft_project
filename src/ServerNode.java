@@ -122,7 +122,7 @@ public  class ServerNode extends UntypedActor {
 //    }
 
 //    public void sendAppendEntries(){
-        //System.out.println("Invio AppendEntries");
+    //System.out.println("Invio AppendEntries");
 //    }
 
 //    public void handleAppendRequest(AppendRequest message){}
@@ -265,8 +265,8 @@ public  class ServerNode extends UntypedActor {
                 context().system().shutdown();
             } else {
                 alreadySent = false;
-                responseReceived.clear();
-                System.out.println("\n RESPONSE RECEIVED SIZE = "+responseReceived.size()+" QUANDO HO APPENA RICEVUTO UN COMANDO DAL CLIENT\n");
+                //responseReceived.clear();
+                //System.out.println("\n RESPONSE RECEIVED SIZE = "+responseReceived.size()+" QUANDO HO APPENA RICEVUTO UN COMANDO DAL CLIENT\n");
                 if (getSender().equals(client)) {
                     System.out.println("\n_____________________________________________________NEW COMMAND BY CLIENT: " + commandReceived + "____________________________________________\n");
                     LogEntry newEntry = new LogEntry(currentTerm, commandReceived);
@@ -297,7 +297,7 @@ public  class ServerNode extends UntypedActor {
             int senderID = ((AppendReply) message).senderID;
             int lastTermSavedPeer = ((AppendReply) message).lastTermSaved;
             //responseReceivd.add(senderID);
-            
+
             Boolean failure = false;
 
             System.out.println("LEADER ---> ricevuto AppendReply da PEER " + senderID + "\n");
@@ -306,8 +306,8 @@ public  class ServerNode extends UntypedActor {
                 getReply[this.id] = true;
                 termsPeers[this.id] = this.log.get(nextIndex[this.id] - 1).term;
                 termsPeers[senderID] = lastTermSavedPeer;
-                responseReceived.add(senderID);
-                System.out.println("\n RESPONSE RECEIVED SIZE = "+responseReceived.size()+" QUANDO HO APPENA RICEVUTO UN APPENDY REPLY NON NULLO DA UN PEER\n");
+                //responseReceived.add(senderID);
+                //System.out.println("\n RESPONSE RECEIVED SIZE = "+responseReceived.size()+" QUANDO HO APPENA RICEVUTO UN APPENDY REPLY NON NULLO DA UN PEER\n");
             }
 
             if (termReceived > this.currentTerm) {
@@ -340,7 +340,7 @@ public  class ServerNode extends UntypedActor {
 //                    sendAppendEntries(getSender());
 //                }
             }
-            if((responseReceived.size()-1) == config.getInt("N_SERVER")){
+            //if((responseReceived.size()-1) == config.getInt("N_SERVER")){
                 if (checkMajorityReply(getReply) && checkMajorityCurrentTerm(this.currentTerm, termsPeers)) {
                     //System.out.println("\nin DOUBLE CHECK\n");
                     Boolean commandCommited = true;
@@ -358,18 +358,18 @@ public  class ServerNode extends UntypedActor {
                         }
                     }
                 }else{
-                    failure = true;
+                    //failure = true;
 
                 }
-            }else{
-                //TODO: wait expiration of timeout
-                //if timeout of getSender() è scaduto richiamo il blocco if(checkMajorityReply && checkMajorityCurrentTerm)
-                
-            }
+//            }else{
+//                //TODO: wait expiration of timeout
+//                //if timeout of getSender() è scaduto richiamo il blocco if(checkMajorityReply && checkMajorityCurrentTerm)
+//
+//            }
             if(failure){
                 Boolean commandCommited = false;
                 InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
-                client.tell(resultCommand, getSelf());                
+                client.tell(resultCommand, getSelf());
             }
             if (alreadySent) {
                 for (int i = 0; i < getReply.length; i++) {
@@ -520,6 +520,11 @@ public  class ServerNode extends UntypedActor {
             //scheduling of message to change state
             electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new StateChanger(), getContext().system().dispatcher(), getSelf());
             //System.out.println("NODO : " + this.id + " stepdown: " + this.stepdown + " stato: " + this.state);
+        }else if(message instanceof SendCommand){
+            //ricevo un comando dal client ma io non sono il leader, quindi comunico al client chi è il leader
+            System.out.println("SONO UN FOLLOWER. HO RICEVUTO UN SendCommand DAL CLIENT. L'ID CLIENT CHE GLI STO MANDANDO E' "+this.leaderID+"\n");
+            InformClient inform = new InformClient(this.leaderID, true);
+            getSender().tell(inform, getSelf());
         }
         else if (message instanceof VoteRequest) {
             //System.out.println("Sono " + this.id+ " ho ricevuto una VoteRequest da " + ((VoteRequest) message).senderID);
@@ -761,5 +766,4 @@ public  class ServerNode extends UntypedActor {
         return idPeer;
     }
 }
-
 
