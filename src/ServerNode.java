@@ -297,6 +297,8 @@ public  class ServerNode extends UntypedActor {
             int senderID = ((AppendReply) message).senderID;
             int lastTermSavedPeer = ((AppendReply) message).lastTermSaved;
             //responseReceivd.add(senderID);
+            
+            Boolean failure = false;
 
             System.out.println("LEADER ---> ricevuto AppendReply da PEER " + senderID + "\n");
 
@@ -356,18 +358,19 @@ public  class ServerNode extends UntypedActor {
                         }
                     }
                 }else{
-//                    Boolean commandCommited = false;
-//                    InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
-//                    client.tell(resultCommand, getSelf());
+                    failure = true;
+
                 }
             }else{
                 //TODO: wait expiration of timeout
+                //if timeout of getSender() è scaduto richiamo il blocco if(checkMajorityReply && checkMajorityCurrentTerm)
+                
             }
-//            } else {
-//                Boolean commandCommited = false;
-//                InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
-//                //client.tell(resultCommand, getSelf());
-//            }
+            if(failure){
+                Boolean commandCommited = false;
+                InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
+                client.tell(resultCommand, getSelf());                
+            }
             if (alreadySent) {
                 for (int i = 0; i < getReply.length; i++) {
                     getReply[i] = false;
