@@ -266,6 +266,7 @@ public  class ServerNode extends UntypedActor {
             } else {
                 alreadySent = false;
                 responseReceived.clear();
+                System.out.println("\n RESPONSE RECEIVED SIZE = "+responseReceived.size()+" QUANDO HO APPENA RICEVUTO UN COMANDO DAL CLIENT\n");
                 if (getSender().equals(client)) {
                     System.out.println("\n_____________________________________________________NEW COMMAND BY CLIENT: " + commandReceived + "____________________________________________\n");
                     LogEntry newEntry = new LogEntry(currentTerm, commandReceived);
@@ -304,6 +305,7 @@ public  class ServerNode extends UntypedActor {
                 termsPeers[this.id] = this.log.get(nextIndex[this.id] - 1).term;
                 termsPeers[senderID] = lastTermSavedPeer;
                 responseReceived.add(senderID);
+                System.out.println("\n RESPONSE RECEIVED SIZE = "+responseReceived.size()+" QUANDO HO APPENA RICEVUTO UN APPENDY REPLY NON NULLO DA UN PEER\n");
             }
 
             if (termReceived > this.currentTerm) {
