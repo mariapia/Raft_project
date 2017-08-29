@@ -1,9 +1,24 @@
 import akka.actor.*;
 import akka.pattern.Patterns;
+import akka.util.Timeout;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import org.apache.camel.util.jsse.FilterParameters;
+import scala.Option;
+import scala.concurrent.Await;
+import scala.concurrent.CanAwait;
+import scala.concurrent.Future;
+import scala.concurrent.duration.FiniteDuration;
+
+import java.time.Duration;
 import java.util.*;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
+import static com.typesafe.sslconfig.ssl.AlgorithmConstraintsParser.Failure;
+import static com.typesafe.sslconfig.ssl.AlgorithmConstraintsParser.Success;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 
 public class Client extends UntypedActor {
     Config config = ConfigFactory.load("application");
@@ -18,8 +33,7 @@ public class Client extends UntypedActor {
     protected Boolean resultCommand = true;
     protected List<ActorRef> participants = new ArrayList<ActorRef>();
 
-
-
+    protected Timeout duration = new Timeout(scala.concurrent.duration.Duration.create(100, TimeUnit.MILLISECONDS));
 
     public Client(int id){
         this.id = id;
@@ -46,38 +60,41 @@ public class Client extends UntypedActor {
             this.leader = this.participants.get(pos_peer);
             this.leaderID = returnIdPeer(leader);
             System.out.println("CLIENT - SONO IN START MESSAGE. IL MIO LEADER E' "+this.leaderID+"\n");
-            sendCommands();
+            sendCommands(this.INDEXCOMMAND);
         }
 
         if (message instanceof InformClient){
             int id = ((InformClient) message).leaderID;
             if(id == -1){
                 //if leader not decided yet, wait
-                System.out.println("CLIENT - SONO IN INFORM CLIENT. IL MIO LEADER E' NESSUNO\n");
+                System.out.println("CLIENT - SONO IN INFORM CLIENT. IL LEADER NON È ANCORA STATO DECISO\n");
+                try {
+                    Thread.sleep(1000);
+                }catch (Exception e){
+                    System.out.println("Exception in thread sleep: "+e.getMessage());
+                }
+                sendCommands(this.INDEXCOMMAND);
             }else{
-                String address = "akka.tcp://RaftSystem@127.0.0.1:"+config.getInt("server_"+id+".port") +"/user/server:" +id;
-                ActorSelection addressLeader = getContext().actorSelection(address);
-
+                this.leader = ((InformClient) message).leader;
                 //TODO: adjust ActorSelection in ActorRef
-                this.leader = getContext().getChild(address);
-                System.out.println("CLIENT - SONO IN INFORM CLIENT. IL MIO LEADER E' "+this.leader.path().name()+"\n");
-                sendCommands();
+                //this.leader = getContext().getChild(address);
+                System.out.println("CLIENT - SONO IN INFORM CLIENT. Il LEADER È STATO DECISO ED È ' "+this.leader.path().name()+"\n");
+                sendCommands(this.INDEXCOMMAND);
+                this.INDEXCOMMAND++;
             }
 
         }
 
     }
 
-    public void sendCommands(){
+    public void sendCommands(int INDEXCOMMAND){
         String commandToExecute;
         System.out.println();
         if(INDEXCOMMAND<commandList.length) {
-            //commandToExecute = getCommand(INDEXCOMMAND);
             commandToExecute = commandList[INDEXCOMMAND];
             SendCommand msgSendCommand = new SendCommand(commandToExecute);
             System.out.println(" CLIENT -----> sto inviando il comando "+msgSendCommand.command+" a "+this.leader.path().name());
             this.leader.tell(msgSendCommand, getSelf());
-            INDEXCOMMAND++;
         }
         if(INDEXCOMMAND == commandList.length){
             commandToExecute = "FINISH";
@@ -98,5 +115,6 @@ public class Client extends UntypedActor {
         //System.out.println("name peer "+name+"   idPeer "+idPeer+"\n");
         return idPeer;
     }
+
 
 }

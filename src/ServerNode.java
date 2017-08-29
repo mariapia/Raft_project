@@ -139,6 +139,7 @@ public  class ServerNode extends UntypedActor {
     }
 
     private void leader(Object message) {
+        System.out.println("LEADER NAME --> "+this.participants.get(this.id).path().name()+", LEADER ID --> "+this.leaderID);
         if (message instanceof StateChanger) {
             leaderID = this.id;
 
@@ -151,10 +152,11 @@ public  class ServerNode extends UntypedActor {
             }
 
             heartbeatScheduler = getContext().system().scheduler().schedule(Duration.Zero(), Duration.create(config.getInt("HEARTBEAT_TIMEOUT"), TimeUnit.MILLISECONDS), getSelf(), new HeartBeat(), getContext().system().dispatcher(), getSelf());
-            if (this.state == ServerState.LEADER) {
-                InformClient tmp = new InformClient(this.id, true);
-                client.tell(tmp, getSelf());
-            }
+//            if (this.state == ServerState.LEADER) {
+//                ActorRef leader = this.participants.get(this.id);
+//                InformClient tmp = new InformClient(this.id, leader,true);
+//                client.tell(tmp, getSelf());
+//            }
 //            for (ActorRef q : participants) {
 //                if (q != getSelf()) {
 //                    System.out.println("Sono " + this.id + " e sono " + this.state + " ho ricevuto i seguenti voti " + this.votes );
@@ -344,7 +346,9 @@ public  class ServerNode extends UntypedActor {
                 if (checkMajorityReply(getReply) && checkMajorityCurrentTerm(this.currentTerm, termsPeers)) {
                     //System.out.println("\nin DOUBLE CHECK\n");
                     Boolean commandCommited = true;
-                    InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
+                    ActorRef leader = this.participants.get(this.leaderID);
+
+                    InformClient resultCommand = new InformClient(this.leaderID,leader, commandCommited);
                     this.commitIndex++;
                     if (!alreadySent) {
                         System.out.println("LEADER ----> Il comando può essere committato. Il client viene informato");
@@ -368,7 +372,8 @@ public  class ServerNode extends UntypedActor {
 //            }
             if(failure){
                 Boolean commandCommited = false;
-                InformClient resultCommand = new InformClient(this.leaderID, commandCommited);
+                ActorRef leader = this.participants.get(this.leaderID);
+                InformClient resultCommand = new InformClient(this.leaderID, leader, commandCommited);
                 client.tell(resultCommand, getSelf());
             }
             if (alreadySent) {
@@ -522,8 +527,15 @@ public  class ServerNode extends UntypedActor {
             //System.out.println("NODO : " + this.id + " stepdown: " + this.stepdown + " stato: " + this.state);
         }else if(message instanceof SendCommand){
             //ricevo un comando dal client ma io non sono il leader, quindi comunico al client chi è il leader
-            System.out.println("SONO UN FOLLOWER. HO RICEVUTO UN SendCommand DAL CLIENT. L'ID CLIENT CHE GLI STO MANDANDO E' "+this.leaderID+"\n");
-            InformClient inform = new InformClient(this.leaderID, true);
+            ActorRef leader;
+            if(this.leaderID == -1){
+                leader = null;
+
+            }else {
+                leader = this.participants.get(this.leaderID);
+            }
+            //System.out.println("SONO UN FOLLOWER. HO RICEVUTO UN SendCommand DAL CLIENT. L'ID LEADER CHE GLI STO MANDANDO E' "+this.leaderID+"\n");
+            InformClient inform = new InformClient(this.leaderID, leader,true);
             getSender().tell(inform, getSelf());
         }
         else if (message instanceof VoteRequest) {
