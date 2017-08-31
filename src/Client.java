@@ -14,9 +14,10 @@ import java.time.Duration;
 import java.util.*;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-import static com.typesafe.sslconfig.ssl.AlgorithmConstraintsParser.Failure;
-import static com.typesafe.sslconfig.ssl.AlgorithmConstraintsParser.Success;
+//import static com.typesafe.sslconfig.ssl.AlgorithmConstraintsParser.Failure;
+//import static com.typesafe.sslconfig.ssl.AlgorithmConstraintsParser.Success;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 
@@ -26,25 +27,26 @@ public class Client extends UntypedActor {
     protected int leaderID = -1;
     ActorRef leader;
 
-    protected String[] commandList = new String[3];
+    protected String[] commandList = new String[5];
     private Random randomGenerator = new Random();
     protected int INDEXCOMMAND = 0;
 
     protected Boolean resultCommand = true;
     protected List<ActorRef> participants = new ArrayList<ActorRef>();
 
-    protected Timeout duration = new Timeout(scala.concurrent.duration.Duration.create(100, TimeUnit.MILLISECONDS));
+    protected Timeout answerTimeout;
 
     public Client(int id){
         this.id = id;
-        for (int i=0; i<3; i++){
+        for (int i=0; i<5; i++){
             this.commandList[i] = "command_"+i;
         }
+        this.answerTimeout = new Timeout(scala.concurrent.duration.Duration.create(3000, TimeUnit.MILLISECONDS));
 
     }
 
     @Override
-    public void onReceive(Object message){
+    public void onReceive(Object message) throws InterruptedException {
         if(message instanceof StartMessage){
 
             StartMessage msg = (StartMessage) message;
@@ -65,6 +67,17 @@ public class Client extends UntypedActor {
 
         if (message instanceof InformClient){
             int id = ((InformClient) message).leaderID;
+            if(((InformClient) message).commandExecuted==true)
+            {
+                System.out.println("Command done, command done is " + commandList[this.INDEXCOMMAND] + " leader is " + this.leaderID);
+                this.INDEXCOMMAND++;
+                try {
+                    Thread.sleep(1000);
+                }catch (Exception e){
+                    System.out.println("Exception in thread sleep: "+e.getMessage());
+                }
+            }
+
             if(id == -1){
                 //if leader not decided yet, wait
                 System.out.println("CLIENT - SONO IN INFORM CLIENT. IL LEADER NON È ANCORA STATO DECISO\n");
@@ -80,7 +93,6 @@ public class Client extends UntypedActor {
                 //this.leader = getContext().getChild(address);
                 System.out.println("CLIENT - SONO IN INFORM CLIENT. Il LEADER È STATO DECISO ED È ' "+this.leader.path().name()+"\n");
                 sendCommands(this.INDEXCOMMAND);
-                this.INDEXCOMMAND++;
             }
 
         }
@@ -88,19 +100,38 @@ public class Client extends UntypedActor {
     }
 
     public void sendCommands(int INDEXCOMMAND){
-        String commandToExecute;
+
+        String commandToExecute = "";
         System.out.println();
+        SendCommand msgSendCommand;
         if(INDEXCOMMAND<commandList.length) {
             commandToExecute = commandList[INDEXCOMMAND];
-            SendCommand msgSendCommand = new SendCommand(commandToExecute);
-            System.out.println(" CLIENT -----> sto inviando il comando "+msgSendCommand.command+" a "+this.leader.path().name());
-            this.leader.tell(msgSendCommand, getSelf());
+            System.out.println(" CLIENT -----> sto inviando il comando "+ commandToExecute +" a "+this.leader.path().name());
+            msgSendCommand = new SendCommand(commandToExecute, this.getSelf().path().name());
+            Future<Object> future = Patterns.ask(this.leader, msgSendCommand, answerTimeout);
+            try {
+                this.onReceive(Await.result(future, answerTimeout.duration()));
+
+            } catch (TimeoutException ex) {
+                System.out.println("\nCLIENT -Server didn't reply. Choosing another server");
+                int pos_peer = randomGenerator.nextInt(this.participants.size());
+                this.leader = this.participants.get(pos_peer);
+                this.leaderID = returnIdPeer(leader);
+                System.out.println("CLIENT - RIPROVO CON UN NUOVO PEER. IL MIO LEADER E' "+this.leaderID+"\n");
+                sendCommands(this.INDEXCOMMAND);
+            }
+            catch (Exception ex)
+            {
+                System.out.println("Error");
+            }
         }
         if(INDEXCOMMAND == commandList.length){
             commandToExecute = "FINISH";
-            SendCommand msgSendCommand = new SendCommand(commandToExecute);
+            msgSendCommand = new SendCommand(commandToExecute, this.getSelf().path().name());
             this.leader.tell(msgSendCommand, getSelf());
+
         }
+
     }
 //
 //    private String getCommand(int indexCommand) {

@@ -1,4 +1,5 @@
 import akka.actor.*;
+import akka.japi.Procedure;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import scala.concurrent.duration.Duration;
@@ -24,6 +25,7 @@ public class ServerNode extends UntypedActor {
     private Integer[] nextIndex = new Integer[config.getInt("N_SERVER")];
     private Integer[] matchIndex = new Integer[config.getInt("N_SERVER")];
     private ActorRef client;
+    private ActorRef client_address;
     private int indexStories = 0;
 
 
@@ -74,13 +76,46 @@ public class ServerNode extends UntypedActor {
         this.log.add(0, null);
     }
 
+    public Procedure<Object> getPauseActor() {
+        return pauseActor;
+    }
+
+    public Procedure<Object> getResumeActor() {
+        return resumeActor;
+    }
+
+    private Procedure<Object> resumeActor = message -> {
+        if (!(message instanceof ResumeActor)) { // discard ResumeMessage when actor is already active
+            try {
+                onReceive(message); // the behaviour when active is the same as usual
+            } catch (Throwable throwable) {
+                System.err.println(throwable.getMessage());
+                throwable.printStackTrace();
+            }
+        }
+    };
+
+
+    private Procedure<Object> pauseActor = message -> {
+        if (!(message instanceof PauseActor)) {
+            if (message instanceof ResumeActor) {
+                this.getContext().become(this.getResumeActor());
+                System.out.println("OH YES, I'M BACK! " + this.id);
+            }
+            else{
+                System.out.println("Sono " + this.id + " message "  + message.toString() + " avoided");
+            }
+        }
+    };
+
     @Override
     public void onReceive(Object message) throws Throwable {
         //System.out.println("Sono " + this.id + " messaggio di tipo " + message.getClass().getName());
         if (message instanceof StartMessage) {
-            debugging = getContext().system().scheduler().schedule(Duration.Zero(), Duration.create(1000, TimeUnit.MILLISECONDS), getSelf(), new Debugging(), getContext().system().dispatcher(), getSelf());
+            debugging = getContext().system().scheduler().schedule(Duration.Zero(), Duration.create(300, TimeUnit.MILLISECONDS), getSelf(), new Debugging(), getContext().system().dispatcher(), getSelf());
             StartMessage msg = (StartMessage) message;
             client = msg.client;
+            System.out.println("IL CLIENT È" + client.path().name());
             try {
                 for (int i = 0; i < msg.group.size(); i++) {
                     this.participants.add(msg.group.get(i));
@@ -92,9 +127,24 @@ public class ServerNode extends UntypedActor {
 
         }
 
+        //PAUSE SIMULATION
+        if (message instanceof PauseActor) {
+            System.out.println("OH NO, SYSTEM " + this.id +" CRASHED");
+            Cancellable pauseTimeout = getContext().system().scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), getSelf(), new ResumeActor(), getContext().system().dispatcher(), getSelf());
+            this.getContext().become(this.getPauseActor());
+        }
+
+        int chanceToFail = ThreadLocalRandom.current().nextInt(1, 101);
+        if (chanceToFail > 98)
+        {
+            this.getSelf().tell(new PauseActor(), getSelf());
+        }
+
         if (message instanceof StateChanger) {
             ((StateChanger) message).onReceive(this);
         }
+
+
 
         if (message instanceof Debugging) {
             ((Debugging) message).onReceive(this);
@@ -255,15 +305,25 @@ public class ServerNode extends UntypedActor {
         if (message instanceof SendCommand) {
             String commandReceived = ((SendCommand) message).command;
             responseReceived.clear();
+            //this.client = this.getSender();
 
             if (commandReceived.equals("FINISH")) {
                 System.out.println("\n____________________________________________________IL CLIENT NON HA PIÙ COMANDI__________________________________________________________\n");
                 context().system().shutdown();
             } else {
+
                 alreadySent = false;
                 //responseReceived.clear();
                 //System.out.println("\n RESPONSE RECEIVED SIZE = "+responseReceived.size()+" QUANDO HO APPENA RICEVUTO UN COMANDO DAL CLIENT\n");
-                if (getSender().equals(client)) {
+                if (((SendCommand) message).client_name.equals(client.path().name())) {
+                    this.client_address = this.getSender();
+                    if (checkCommandExecuted(commandReceived))
+                    {
+                        System.out.println("\n_____________________________________________________COMMAND " + commandReceived + " ALREADY EXECUTED____________________________________________\n");
+                        InformClient resultCommand = new InformClient(this.leaderID, this.participants.get(this.leaderID), true);
+                        this.client_address.tell(resultCommand, getSelf());
+                        return;
+                    }
                     System.out.println("\n_____________________________________________________NEW COMMAND BY CLIENT: " + commandReceived + "____________________________________________\n");
                     LogEntry newEntry = new LogEntry(currentTerm, commandReceived);
                     log.add(newEntry);
@@ -281,7 +341,7 @@ public class ServerNode extends UntypedActor {
                     }
 
                 } else {
-                    System.out.println("ERROR, sendCommand must be sent by client");
+                    System.out.println("ERROR, sendCommand must be sent by client, received from " + ((SendCommand) message).client_name);
                 }
             }
 
@@ -299,7 +359,7 @@ public class ServerNode extends UntypedActor {
 
             //System.out.println("LEADER ---> ricevuto AppendReply da PEER " + senderID + "\n");
 
-            if (lastTermSavedPeer != -2) {
+            if (lastTermSavedPeer >=0) {
                 if (commitIndexPeer == this.commitIndex) {
                     getReply[this.id] = true;
                     termsPeers[this.id] = this.log.get(nextIndex[this.id] - 1).term;
@@ -348,7 +408,7 @@ public class ServerNode extends UntypedActor {
                     this.commitIndex++;
                     if (!alreadySent) {
                         System.out.println("LEADER - command has been committed. Client informed");
-                        client.tell(resultCommand, getSelf());
+                        client_address.tell(resultCommand, getSelf());
                         alreadySent = true;
                         UpdateCommitIndex update = new UpdateCommitIndex();
                         for (ActorRef peer : this.participants) {
@@ -370,7 +430,7 @@ public class ServerNode extends UntypedActor {
                     Boolean commandCommited = false;
                     ActorRef leader = this.participants.get(this.leaderID);
                     InformClient resultCommand = new InformClient(this.leaderID, leader, commandCommited);
-                    client.tell(resultCommand, getSelf());
+                    client_address.tell(resultCommand, getSelf());
                 }
             }
             if (alreadySent) {
@@ -459,8 +519,7 @@ public class ServerNode extends UntypedActor {
             } else if (termReceived < this.currentTerm) {
                 System.out.println("success = FALSE, send answer to leader");
                 success = false;
-                int lastTermSaved = this.log.get(this.indexStories - 1).term;
-                AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved, this.commitIndex);
+                AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, -1, this.commitIndex);
                 getSender().tell(response, getSelf());
 
             }
@@ -532,7 +591,7 @@ public class ServerNode extends UntypedActor {
                 leader = this.participants.get(this.leaderID);
             }
             //System.out.println("SONO UN FOLLOWER. HO RICEVUTO UN SendCommand DAL CLIENT. L'ID LEADER CHE GLI STO MANDANDO E' "+this.leaderID+"\n");
-            InformClient inform = new InformClient(this.leaderID, leader, true);
+            InformClient inform = new InformClient(this.leaderID, leader, false);
             getSender().tell(inform, getSelf());
         } else if (message instanceof VoteRequest) {
             //System.out.println("Sono " + this.id+ " ho ricevuto una VoteRequest da " + ((VoteRequest) message).senderID);
@@ -574,15 +633,15 @@ public class ServerNode extends UntypedActor {
                 System.out.println("STEPDOWN()");
                 stepDown(termReceived);
             } else if (termReceived < this.currentTerm) {
-                System.out.println("success = FALSE, invio risposta al leader");
+                System.out.println("success = FALSE, invio risposta al leader, message received from " + getSender().path().name());
                 success = false;
-                int lastTermSaved = this.log.get(this.indexStories - 1).term;
-                AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved, this.commitIndex);
+                AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, -1, this.commitIndex);
                 getSender().tell(response, getSelf());
-
+                return;
             }
             this.leaderID = ((AppendRequest) message).leaderId;
             if (entriesReceived.isEmpty()) {
+                System.out.println("Rec heartbeat from " + this.leaderID);
                 if (electionScheduler != null && !electionScheduler.isCancelled())
                     electionScheduler.cancel();
 
@@ -747,6 +806,18 @@ public class ServerNode extends UntypedActor {
         }
     }
 
+    public boolean checkCommandExecuted(String command)
+    {
+        if(this.log.size() > 0)
+        {
+            for(LogEntry entry : this.log){
+                if(entry != null && entry.command.equals(command))
+                    return true;
+            }
+        }
+        return false;
+    }
+
     public int returnIdPeer(ActorRef peer) {
         String name = peer.path().name();
         String[] tokens = name.split("_");
@@ -754,5 +825,6 @@ public class ServerNode extends UntypedActor {
         //System.out.println("name peer "+name+"   idPeer "+idPeer+"\n");
         return idPeer;
     }
+
 }
 
