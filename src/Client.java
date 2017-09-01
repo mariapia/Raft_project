@@ -36,19 +36,20 @@ public class Client extends UntypedActor {
 
     protected Timeout answerTimeout;
 
-    public Client(int id){
+    public Client(int id) {
         this.id = id;
-        for (int i=0; i<5; i++){
-            this.commandList[i] = "command_"+i;
+        for (int i = 0; i < 5; i++) {
+            this.commandList[i] = "command_" + i;
         }
+        //timout to know how much wait for a reply from servers
         this.answerTimeout = new Timeout(scala.concurrent.duration.Duration.create(3000, TimeUnit.MILLISECONDS));
 
     }
 
     @Override
     public void onReceive(Object message) throws InterruptedException {
-        if(message instanceof StartMessage){
-
+        if (message instanceof StartMessage) {
+            //inform client of all servers in the system
             StartMessage msg = (StartMessage) message;
             try {
                 for (int i = 0; i < msg.group.size(); i++) {
@@ -58,40 +59,36 @@ public class Client extends UntypedActor {
             } catch (Throwable e) {
                 System.out.println(e.getStackTrace());
             }
+            //at the beginning, set as leader a random server and send to it a command
             int pos_peer = randomGenerator.nextInt(this.participants.size());
             this.leader = this.participants.get(pos_peer);
             this.leaderID = returnIdPeer(leader);
-            System.out.println("CLIENT - SONO IN START MESSAGE. IL MIO LEADER E' "+this.leaderID+"\n");
             sendCommands(this.INDEXCOMMAND);
         }
 
-        if (message instanceof InformClient){
+        if (message instanceof InformClient) {
             int id = ((InformClient) message).leaderID;
-            if(((InformClient) message).commandExecuted==true)
-            {
+            //if command has been committed, increment index of command list
+            if (((InformClient) message).commandExecuted == true) {
                 System.out.println("Command done, command done is " + commandList[this.INDEXCOMMAND] + " leader is " + this.leaderID);
                 this.INDEXCOMMAND++;
                 try {
                     Thread.sleep(1000);
-                }catch (Exception e){
-                    System.out.println("Exception in thread sleep: "+e.getMessage());
+                } catch (Exception e) {
+                    System.out.println("Exception in thread sleep: " + e.getMessage());
                 }
             }
 
-            if(id == -1){
+            if (id == -1) {
                 //if leader not decided yet, wait
-                System.out.println("CLIENT - SONO IN INFORM CLIENT. IL LEADER NON È ANCORA STATO DECISO\n");
                 try {
                     Thread.sleep(1000);
-                }catch (Exception e){
-                    System.out.println("Exception in thread sleep: "+e.getMessage());
+                } catch (Exception e) {
+                    System.out.println("Exception in thread sleep: " + e.getMessage());
                 }
                 sendCommands(this.INDEXCOMMAND);
-            }else{
+            } else {
                 this.leader = ((InformClient) message).leader;
-                //TODO: adjust ActorSelection in ActorRef
-                //this.leader = getContext().getChild(address);
-                System.out.println("CLIENT - SONO IN INFORM CLIENT. Il LEADER È STATO DECISO ED È ' "+this.leader.path().name()+"\n");
                 sendCommands(this.INDEXCOMMAND);
             }
 
@@ -99,47 +96,35 @@ public class Client extends UntypedActor {
 
     }
 
-    public void sendCommands(int INDEXCOMMAND){
+    public void sendCommands(int INDEXCOMMAND) {
 
         String commandToExecute = "";
         System.out.println();
         SendCommand msgSendCommand = null;
-        if(INDEXCOMMAND<commandList.length) {
+        if (INDEXCOMMAND < commandList.length) {
             commandToExecute = commandList[INDEXCOMMAND];
-            System.out.println(" CLIENT -----> sto inviando il comando "+ commandToExecute +" a "+this.leader.path().name());
             msgSendCommand = new SendCommand(commandToExecute, this.getSelf().path().name());
-
         }
-        if(INDEXCOMMAND == commandList.length){
+        if (INDEXCOMMAND == commandList.length) {
             commandToExecute = "FINISH";
             msgSendCommand = new SendCommand(commandToExecute, this.getSelf().path().name());
-
         }
-
         Future<Object> future = Patterns.ask(this.leader, msgSendCommand, answerTimeout);
         try {
             this.onReceive(Await.result(future, answerTimeout.duration()));
 
         } catch (TimeoutException ex) {
-            System.out.println("\nCLIENT -Server didn't reply. Choosing another server");
             int pos_peer = randomGenerator.nextInt(this.participants.size());
             this.leader = this.participants.get(pos_peer);
             this.leaderID = returnIdPeer(leader);
-            System.out.println("CLIENT - RIPROVO CON UN NUOVO PEER. IL MIO LEADER E' "+this.leaderID+"\n");
             sendCommands(this.INDEXCOMMAND);
-        }
-        catch (Exception ex)
-        {
-            System.out.println("Error");
+        } catch (Exception ex) {
+            System.out.println("No other commands to send");
         }
 
     }
-//
-//    private String getCommand(int indexCommand) {
-//        String res = commandList[indexCommand];
-//        INDEXCOMMAND = (indexCommand + 1) % commandList.length;
-//        return res;
-//    }
+
+    //return id from path name
     public int returnIdPeer(ActorRef peer) {
         String name = peer.path().name();
         String[] tokens = name.split("_");

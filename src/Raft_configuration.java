@@ -26,13 +26,13 @@ public class Raft_configuration {
         }
         group = Collections.unmodifiableList(group);
 
-
         ActorRef client = system.actorOf(Props.create(Client.class, 101), "client_"+101);
-
+        //start all servers
         StartMessage start = new StartMessage(group, client);
         for (ActorRef peer : group) {
             peer.tell(start, null);
         }
+        //start client
         client.tell(start, client);
 
     }
