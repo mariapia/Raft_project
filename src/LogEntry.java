@@ -9,4 +9,9 @@ public class LogEntry {
         this.term = term;
         this.command = command;
     }
+
+    @Override
+    public String toString() {
+        return "[Term = " + this.term + ", Command = " + this.command + "]";
+    }
 }

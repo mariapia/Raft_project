@@ -7,6 +7,7 @@ import scala.concurrent.duration.Duration;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import akka.persistence.*;
 
 public class ServerNode extends UntypedActor {
     Config config = ConfigFactory.load("application");
@@ -73,7 +74,7 @@ public class ServerNode extends UntypedActor {
         this.stepdown = false;
         this.votedFor = -1;
         //aggiungo al log con index = 0 una entry nulla, per far partire il log dalla posizione 1 così che combaci con l'index dell'algoritmo
-        this.log.add(0, null);
+        this.log.add(new LogEntry(0, "START PROTOCOL"));
     }
 
     public Procedure<Object> getPauseActor() {
@@ -126,24 +127,19 @@ public class ServerNode extends UntypedActor {
             }
 
         }
-
-        //PAUSE SIMULATION
         if (message instanceof PauseActor) {
-            System.out.println("OH NO, SYSTEM " + this.id +" CRASHED");
-            Cancellable pauseTimeout = getContext().system().scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), getSelf(), new ResumeActor(), getContext().system().dispatcher(), getSelf());
+            System.out.println("OH NO, SYSTEM " + this.id +" PAUSED");
+            Cancellable crashTimeout = getContext().system().scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), getSelf(), new ResumeActor(), getContext().system().dispatcher(), getSelf());
             this.getContext().become(this.getPauseActor());
         }
-
-        int chanceToFail = ThreadLocalRandom.current().nextInt(1, 101);
-        if (chanceToFail > 98)
-        {
-            this.getSelf().tell(new PauseActor(), getSelf());
-        }
-
         if (message instanceof StateChanger) {
             ((StateChanger) message).onReceive(this);
         }
-
+        int chanceToFail = ThreadLocalRandom.current().nextInt(1, 101);
+        if (chanceToFail > 99)
+        {
+            this.getSelf().tell(new PauseActor(), getSelf());
+        }
 
 
         if (message instanceof Debugging) {
@@ -222,15 +218,15 @@ public class ServerNode extends UntypedActor {
                 boolean success = false;
 
                 if (termReceived > this.currentTerm) {
-                    System.out.println("STEPDOWN()");
+                    System.out.println("STEPDOWN() ricevuto un term maggiore da " + getSender().path().name() + " io sono " + this.id);
                     stepDown(termReceived);
                 } else if (termReceived < this.currentTerm) {
-                    System.out.println("success = FALSE, send answer to leader");
+                    System.out.println("success = FALSE, send answer to leader i'm " + this.id + "  leader is " + this.leaderID + " meesage received from " + getSender().path().name());
                     success = false;
                     int lastTermSaved = this.log.get(this.indexStories - 1).term;
                     AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved, this.commitIndex);
                     getSender().tell(response, getSelf());
-
+                    return;
                 }
                 this.leaderID = ((AppendRequest) message).leaderId;
                 if (entriesReceived.isEmpty()) {
@@ -279,6 +275,10 @@ public class ServerNode extends UntypedActor {
             if (((VoteRequest) message).currentTerm > currentTerm) {
                 stepDown(((VoteRequest) message).currentTerm);
             }
+            if (((VoteRequest) message).currentTerm < currentTerm) {
+                this.getSender().tell(new VoteReply(-1, currentTerm, this.id, false), getSelf());
+                return;
+            }
             if (((VoteRequest) message).currentTerm == currentTerm &&
                     (this.votedFor == -1 || this.votedFor == ((VoteRequest) message).senderID) &&
                     (((VoteRequest) message).lastLogTerm > getLastLogTerm(log.size() - 1) || (((VoteRequest) message).lastLogTerm == getLastLogTerm(log.size() - 1) && ((VoteRequest) message).lastLogIndex >= getLastLogIndex())
@@ -286,15 +286,14 @@ public class ServerNode extends UntypedActor {
                 this.votedFor = ((VoteRequest) message).senderID;
                 //System.out.println("Sono " + this.id + " ho votato per " + this.votedFor);
 
-
+                if (electionScheduler != null && !electionScheduler.isCancelled())
+                    electionScheduler.cancel();
                 int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
                 electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
-
+                this.getSender().tell(new VoteReply(votedFor, currentTerm, this.id, true), getSelf());
+                return;
             }
-
-            if (((VoteRequest) message).senderID == votedFor) {
-                this.getSender().tell(new VoteReply(votedFor, currentTerm, this.id), getSelf());
-            }
+                this.getSender().tell(new VoteReply(votedFor, currentTerm, this.id, false), getSelf());
         }
 
         if (message instanceof HeartBeat) {
@@ -309,6 +308,7 @@ public class ServerNode extends UntypedActor {
 
             if (commandReceived.equals("FINISH")) {
                 System.out.println("\n____________________________________________________IL CLIENT NON HA PIÙ COMANDI__________________________________________________________\n");
+                getSender().tell(new InformClient(this.leaderID, this.participants.get(this.leaderID), true), getSelf());
                 context().system().shutdown();
             } else {
 
@@ -444,11 +444,14 @@ public class ServerNode extends UntypedActor {
     }
 
     private void candidate(Object message) {
-        if (electionScheduler != null && !electionScheduler.isCancelled())
-            electionScheduler.cancel();
+        //TODO BUGGONE GIGANTE
+
+
 
         if (message instanceof StateChanger || message instanceof ElectionMessage) {
-            //System.out.println("SONO CANDIDATE e sono " + this.id);
+            if (electionScheduler != null && !electionScheduler.isCancelled())
+                electionScheduler.cancel();
+            System.out.println("SONO CANDIDATE e sono " + this.id + " start new election");
             this.votes.clear();
 
             this.currentTerm++;
@@ -462,7 +465,9 @@ public class ServerNode extends UntypedActor {
                 lastLogIndex = getLastLogIndex();
                 lastLogTerm = getLastLogTerm(lastLogIndex);
             }
-
+            int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
+            electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
+            System.out.println("Mando una VoteRequest ai partecipanti sono " + this.id);
             for (ActorRef q : participants) {
                 if (q != getSelf()) {
                     q.tell(new VoteRequest(this.id, this.currentTerm, lastLogIndex, lastLogTerm), getSelf());
@@ -472,6 +477,11 @@ public class ServerNode extends UntypedActor {
             if (((VoteRequest) message).currentTerm > currentTerm) {
                 stepDown(((VoteRequest) message).currentTerm);
             }
+
+            if (((VoteRequest) message).currentTerm < currentTerm) {
+                this.getSender().tell(new VoteReply(-1, currentTerm, this.id, false), getSelf());
+                return;
+            }
             //DONE NOW
             if (((VoteRequest) message).currentTerm == currentTerm &&
                     (this.votedFor == -1 || this.votedFor == ((VoteRequest) message).senderID) &&
@@ -479,24 +489,23 @@ public class ServerNode extends UntypedActor {
                     )) {
 
                 votedFor = ((VoteRequest) message).senderID;
-
+                if (electionScheduler != null && !electionScheduler.isCancelled())
+                    electionScheduler.cancel();
                 int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
                 electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
+                this.getSender().tell(new VoteReply(votedFor, currentTerm, this.id, true), getSelf());
+                return;
             }
-
-            if (((VoteRequest) message).senderID == votedFor) {
-                this.getSender().tell(new VoteReply(votedFor, currentTerm, this.id), getSelf());
-            }
+            this.getSender().tell(new VoteReply(-1, currentTerm, this.id, false), getSelf());
         } else if (message instanceof VoteReply) {
             //System.out.println("Ho ricevuto un voteReply da " + ((VoteReply) message).senderID);
             if (((VoteReply) message).term > this.currentTerm) {
                 stepDown(((VoteReply) message).term);
             }
             if (((VoteReply) message).term == this.currentTerm && this.state == ServerState.CANDIDATE) {
-                if (((VoteReply) message).votedID == this.id) {
+                if (((VoteReply) message).votedID == this.id && ((VoteReply) message).granted == true) {
                     votes.add(((VoteReply) message).senderID);
                 }
-                electionScheduler.cancel();
                 if (votes.size() > participants.size() / 2) {
                     this.stepdown = false;
                     changeToLeader = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(0, TimeUnit.MILLISECONDS), getSelf(), new StateChanger(), getContext().system().dispatcher(), getSelf());
@@ -514,16 +523,19 @@ public class ServerNode extends UntypedActor {
             boolean success = false;
 
             if (termReceived > this.currentTerm) {
-                System.out.println("STEPDOWN()");
+                System.out.println("STEPDOWN() ricevuto un term maggiore da " + getSender().path().name() + " io sono " + this.id);
                 stepDown(termReceived);
             } else if (termReceived < this.currentTerm) {
-                System.out.println("success = FALSE, send answer to leader");
+                System.out.println("success = FALSE, send answer to leader i'm " + this.id + "  leader is " + this.leaderID + " meesage received from " + getSender().path().name());
                 success = false;
                 AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, -1, this.commitIndex);
                 getSender().tell(response, getSelf());
-
+                return;
             }
-            this.state = ServerState.FOLLOWER;
+            if (termReceived >= this.currentTerm)
+                this.stepdown = true;
+                stepDownScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(0, TimeUnit.MILLISECONDS), getSelf(), new StateChanger(), getContext().system().dispatcher(), getSelf());
+
             this.leaderID = ((AppendRequest) message).leaderId;
             if (entriesReceived.isEmpty()) {
                 if (electionScheduler != null && !electionScheduler.isCancelled())
@@ -569,15 +581,14 @@ public class ServerNode extends UntypedActor {
     }
 
     private void follower(Object message) {
-        if (electionScheduler != null && !electionScheduler.isCancelled())
-            electionScheduler.cancel();
-
         if (heartbeatScheduler != null && !heartbeatScheduler.isCancelled())
             heartbeatScheduler.cancel();
         if (message instanceof StartMessage || message instanceof StateChanger || message instanceof ElectionMessage) {
+            if (electionScheduler != null && !electionScheduler.isCancelled())
+                electionScheduler.cancel();
             this.stepdown = false;
             int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
-            //System.out.println("Sono " + this.id + " ho settato il timeout a " + electionTimeout);
+            System.out.println("Sono " + this.id + " ho settato il timeout a " + electionTimeout);
             //scheduling of message to change state
             electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new StateChanger(), getContext().system().dispatcher(), getSelf());
             //System.out.println("NODO : " + this.id + " stepdown: " + this.stepdown + " stato: " + this.state);
@@ -594,26 +605,29 @@ public class ServerNode extends UntypedActor {
             InformClient inform = new InformClient(this.leaderID, leader, false);
             getSender().tell(inform, getSelf());
         } else if (message instanceof VoteRequest) {
-            //System.out.println("Sono " + this.id+ " ho ricevuto una VoteRequest da " + ((VoteRequest) message).senderID);
+            System.out.println("Sono " + this.id+ " ho ricevuto una VoteRequest da " + ((VoteRequest) message).senderID);
             if (((VoteRequest) message).currentTerm > currentTerm) {
                 stepDown(((VoteRequest) message).currentTerm);
+            }
+            if (((VoteRequest) message).currentTerm < currentTerm) {
+                this.getSender().tell(new VoteReply(-1, currentTerm, this.id, false), getSelf());
+                return;
             }
             if (((VoteRequest) message).currentTerm == currentTerm &&
                     (this.votedFor == -1 || this.votedFor == ((VoteRequest) message).senderID) &&
                     (((VoteRequest) message).lastLogTerm > getLastLogTerm(log.size() - 1) || (((VoteRequest) message).lastLogTerm == getLastLogTerm(log.size() - 1) && ((VoteRequest) message).lastLogIndex >= getLastLogIndex())
                     )) {
                 this.votedFor = ((VoteRequest) message).senderID;
-                //System.out.println("Sono " + this.id + " ho votato per " + this.votedFor);
-
-
+                System.out.println("Sono " + this.id + " ho votato per " + this.votedFor);
+                if (electionScheduler != null && !electionScheduler.isCancelled())
+                    electionScheduler.cancel();
                 int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
                 electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
-
+                this.getSender().tell(new VoteReply(votedFor, currentTerm, this.id, true), getSelf());
+                return;
             }
+            this.getSender().tell(new VoteReply(-1, currentTerm, this.id, false), getSelf());
 
-            if (((VoteRequest) message).senderID == votedFor) {
-                this.getSender().tell(new VoteReply(votedFor, currentTerm, this.id), getSelf());
-            }
         } else if (message instanceof VoteReply) {
             if (((VoteReply) message).term > this.currentTerm) {
                 stepDown(((VoteReply) message).term);
@@ -630,10 +644,10 @@ public class ServerNode extends UntypedActor {
             boolean success = false;
 
             if (termReceived > this.currentTerm) {
-                System.out.println("STEPDOWN()");
+                System.out.println("STEPDOWN() ricevuto un term maggiore da " + getSender().path().name() + " io sono " + this.id);
                 stepDown(termReceived);
             } else if (termReceived < this.currentTerm) {
-                System.out.println("success = FALSE, invio risposta al leader, message received from " + getSender().path().name());
+                System.out.println("Ricevuta appendEntries con term minore del mio, invio risposta al leader, message received from " + getSender().path().name());
                 success = false;
                 AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, -1, this.commitIndex);
                 getSender().tell(response, getSelf());
@@ -696,8 +710,8 @@ public class ServerNode extends UntypedActor {
         this.nextIndex[id_peer] = nextIndexLogPeer;
 
         ArrayList<LogEntry> entries = getEntriesToSend(this.log, (nextIndexLogPeer - 1));
-
-        AppendRequest appendRequest = new AppendRequest(this.id, this.currentTerm, (nextIndexLogPeer - 1), this.log.get(nextIndexLogPeer).term, entries, this.commitIndex);
+        System.out.println("JKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKMD " + this.log.get(nextIndexLogPeer).term);
+        AppendRequest appendRequest = new AppendRequest(this.id, this.currentTerm, (nextIndexLogPeer - 1), this.log.get(nextIndexLogPeer-1).term, entries, this.commitIndex);
         //System.out.println("Invio al peer " + id_peer + " di una AppendRequest con index di riferimento " + (nextIndexLogPeer - 1) + "\n");
         peer.tell(appendRequest, getSelf());
 

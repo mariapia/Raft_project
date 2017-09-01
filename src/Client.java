@@ -16,8 +16,8 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-//import static com.typesafe.sslconfig.ssl.AlgorithmConstraintsParser.Failure;
-//import static com.typesafe.sslconfig.ssl.AlgorithmConstraintsParser.Success;
+import static com.typesafe.sslconfig.ssl.AlgorithmConstraintsParser.Failure;
+import static com.typesafe.sslconfig.ssl.AlgorithmConstraintsParser.Success;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 
@@ -103,33 +103,34 @@ public class Client extends UntypedActor {
 
         String commandToExecute = "";
         System.out.println();
-        SendCommand msgSendCommand;
+        SendCommand msgSendCommand = null;
         if(INDEXCOMMAND<commandList.length) {
             commandToExecute = commandList[INDEXCOMMAND];
             System.out.println(" CLIENT -----> sto inviando il comando "+ commandToExecute +" a "+this.leader.path().name());
             msgSendCommand = new SendCommand(commandToExecute, this.getSelf().path().name());
-            Future<Object> future = Patterns.ask(this.leader, msgSendCommand, answerTimeout);
-            try {
-                this.onReceive(Await.result(future, answerTimeout.duration()));
 
-            } catch (TimeoutException ex) {
-                System.out.println("\nCLIENT -Server didn't reply. Choosing another server");
-                int pos_peer = randomGenerator.nextInt(this.participants.size());
-                this.leader = this.participants.get(pos_peer);
-                this.leaderID = returnIdPeer(leader);
-                System.out.println("CLIENT - RIPROVO CON UN NUOVO PEER. IL MIO LEADER E' "+this.leaderID+"\n");
-                sendCommands(this.INDEXCOMMAND);
-            }
-            catch (Exception ex)
-            {
-                System.out.println("Error");
-            }
         }
         if(INDEXCOMMAND == commandList.length){
             commandToExecute = "FINISH";
             msgSendCommand = new SendCommand(commandToExecute, this.getSelf().path().name());
-            this.leader.tell(msgSendCommand, getSelf());
 
+        }
+
+        Future<Object> future = Patterns.ask(this.leader, msgSendCommand, answerTimeout);
+        try {
+            this.onReceive(Await.result(future, answerTimeout.duration()));
+
+        } catch (TimeoutException ex) {
+            System.out.println("\nCLIENT -Server didn't reply. Choosing another server");
+            int pos_peer = randomGenerator.nextInt(this.participants.size());
+            this.leader = this.participants.get(pos_peer);
+            this.leaderID = returnIdPeer(leader);
+            System.out.println("CLIENT - RIPROVO CON UN NUOVO PEER. IL MIO LEADER E' "+this.leaderID+"\n");
+            sendCommands(this.INDEXCOMMAND);
+        }
+        catch (Exception ex)
+        {
+            System.out.println("Error");
         }
 
     }
