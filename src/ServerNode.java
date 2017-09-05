@@ -190,9 +190,9 @@ public class ServerNode extends UntypedActor {
             }
 
             heartbeatScheduler = getContext().system().scheduler().schedule(Duration.Zero(), Duration.create(config.getInt("HEARTBEAT_TIMEOUT"), TimeUnit.MILLISECONDS), getSelf(), new HeartBeat(), getContext().system().dispatcher(), getSelf());
-
-            //old leders may receive AppendRequest message
-            //leader receive AppendRequest during Eleciton steps
+        }
+            //old leaders may receive AppendRequest message
+            //leader receives AppendRequest during Election steps
             if (message instanceof AppendRequest) {
                 int termReceived = ((AppendRequest) message).term;
                 int prevIndexReceived = ((AppendRequest) message).prevIndex;
@@ -243,7 +243,6 @@ public class ServerNode extends UntypedActor {
                     AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -1, -1, 0);
                 }
             }
-        }
 
         if (message instanceof VoteRequest) {
             if (((VoteRequest) message).currentTerm > currentTerm) {
@@ -526,6 +525,8 @@ public class ServerNode extends UntypedActor {
     private void follower(Object message) {
         if (heartbeatScheduler != null && !heartbeatScheduler.isCancelled())
             heartbeatScheduler.cancel();
+
+        //if a follower receives a message of these type it will delete any previous timeout and starts a new ones. The range of the timeout is defined in the configuration file
         if (message instanceof StartMessage || message instanceof StateChanger || message instanceof ElectionMessage) {
             if (electionScheduler != null && !electionScheduler.isCancelled())
                 electionScheduler.cancel();
@@ -546,15 +547,19 @@ public class ServerNode extends UntypedActor {
             }
             InformClient inform = new InformClient(this.leaderID, leader, false);
             getSender().tell(inform, getSelf());
-        } else if (message instanceof VoteRequest) {
 
+        } else if (message instanceof VoteRequest) {
+            //VoteRequest received from the Candidate, it will check the consistency of the term and if Candidate's log is up-to-date
+            //if peer's term is lower than the one receive, so it will perform a stepdown procedure to adjust its term
             if (((VoteRequest) message).currentTerm > currentTerm) {
                 stepDown(((VoteRequest) message).currentTerm);
             }
+            //if peer's term is greater than Candidate's term, so it will inform the Candidate of this inconsistency
             if (((VoteRequest) message).currentTerm < currentTerm) {
                 this.getSender().tell(new VoteReply(-1, currentTerm, this.id, false), getSelf());
                 return;
             }
+            //grant the vote to the Candidate if the Candidate's log is up-to-date
             if (((VoteRequest) message).currentTerm == currentTerm &&
                     (this.votedFor == -1 || this.votedFor == ((VoteRequest) message).senderID) &&
                     (((VoteRequest) message).lastLogTerm > getLastLogTerm(log.size() - 1) || (((VoteRequest) message).lastLogTerm == getLastLogTerm(log.size() - 1) && ((VoteRequest) message).lastLogIndex >= getLastLogIndex())
@@ -583,9 +588,10 @@ public class ServerNode extends UntypedActor {
             int commitIndexReceived = ((AppendRequest) message).commitIndex;
 
             boolean success = false;
-
+            //if peer's term is older than the one received, performs a stepDown operation to update the term
             if (termReceived > this.currentTerm) {
                 stepDown(termReceived);
+                //if peer's term is greater inform the leader
             } else if (termReceived < this.currentTerm) {
                 success = false;
                 //inform leader that server cannot commit command because terms are not correct
@@ -594,6 +600,7 @@ public class ServerNode extends UntypedActor {
                 return;
             }
             this.leaderID = ((AppendRequest) message).leaderId;
+            //if entries is empty it means that the peer has received an heartbeat
             if (entriesReceived.isEmpty()) {
                 if (electionScheduler != null && !electionScheduler.isCancelled())
                     electionScheduler.cancel();
@@ -609,7 +616,7 @@ public class ServerNode extends UntypedActor {
             }
 
             this.indexStories = 0;
-
+            //check log consistency and in case store the entries sent by the leader
             if (prevIndexReceived == 0) {
                 success = true;
             } else if (prevIndexReceived <= this.log.size() && this.log.get(prevIndexReceived).term == prevTermReceived) {

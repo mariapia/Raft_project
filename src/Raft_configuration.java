@@ -13,7 +13,7 @@ import com.typesafe.config.Config;
 public class Raft_configuration {
     public static void main(String[] args) throws InterruptedException  {
 
-        Config config = ConfigFactory.load("application");
+        Config config = ConfigFactory.load("application.conf");
         System.out.println("N_server: "+ config.getInt("N_SERVER"));
 
         final ActorSystem system = ActorSystem.create("RaftSystem", config);
