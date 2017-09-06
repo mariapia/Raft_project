@@ -191,59 +191,63 @@ public class ServerNode extends UntypedActor {
 
             heartbeatScheduler = getContext().system().scheduler().schedule(Duration.Zero(), Duration.create(config.getInt("HEARTBEAT_TIMEOUT"), TimeUnit.MILLISECONDS), getSelf(), new HeartBeat(), getContext().system().dispatcher(), getSelf());
         }
-            //old leaders may receive AppendRequest message
-            //leader receives AppendRequest during Election steps
-            if (message instanceof AppendRequest) {
-                int termReceived = ((AppendRequest) message).term;
-                int prevIndexReceived = ((AppendRequest) message).prevIndex;
-                int prevTermReceived = ((AppendRequest) message).prevTerm;
-                ArrayList<LogEntry> entriesReceived = ((AppendRequest) message).entries;
-                int commitIndexReceived = ((AppendRequest) message).commitIndex;
 
-                boolean success = false;
+        //old leaders may receive AppendRequest message
+        //leader receives AppendRequest during Election steps
+        if (message instanceof AppendRequest) {
+            int termReceived = ((AppendRequest) message).term;
+            int prevIndexReceived = ((AppendRequest) message).prevIndex;
+            int prevTermReceived = ((AppendRequest) message).prevTerm;
+            ArrayList<LogEntry> entriesReceived = ((AppendRequest) message).entries;
+            int commitIndexReceived = ((AppendRequest) message).commitIndex;
 
-                if (termReceived > this.currentTerm) {
-                    stepDown(termReceived);
-                } else if (termReceived < this.currentTerm) {
-                    success = false;
-                    int lastTermSaved = this.log.get(this.indexStories - 1).term;
-                    AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved, this.commitIndex);
-                    getSender().tell(response, getSelf());
-                    return;
-                }
-                this.leaderID = ((AppendRequest) message).leaderId;
+            boolean success = false;
 
-                if (entriesReceived.isEmpty()) {
-                    if (electionScheduler != null && !electionScheduler.isCancelled())
-                        electionScheduler.cancel();
-
-                    int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
-                    electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
-                    success = true;
-                    AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -2, -2, 0);
-
-                    this.getSender().tell(appRepMessage, this.getSelf());
-                    return;
-                }
-
-                this.indexStories = 0;
-
-                if (prevIndexReceived == 0) {
-                    success = true;
-                } else if (prevIndexReceived <= this.log.size() && this.log.get(prevIndexReceived).term == prevTermReceived) {
-                    success = true;
-                }
-                if (success) {
-                    this.indexStories = storeEntries(prevIndexReceived, entriesReceived, commitIndexReceived);
-
-                    int lastTermSaved = this.log.get(this.indexStories).term;
-                    AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved, this.commitIndex);
-                    getSender().tell(response, getSelf());
-                } else {
-                    AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -1, -1, 0);
-                }
+            if (termReceived > this.currentTerm) {
+                stepDown(termReceived);
+            } else if (termReceived < this.currentTerm) {
+                success = false;
+                int lastTermSaved = this.log.get(this.indexStories - 1).term;
+                AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved, this.commitIndex);
+                getSender().tell(response, getSelf());
+                return;
             }
 
+            this.leaderID = ((AppendRequest) message).leaderId;
+
+            if (entriesReceived.isEmpty()) {
+                if (electionScheduler != null && !electionScheduler.isCancelled())
+                    electionScheduler.cancel();
+
+                int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
+                electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
+                success = true;
+                AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -2, -2, 0);
+
+                this.getSender().tell(appRepMessage, this.getSelf());
+                return;
+            }
+
+            this.indexStories = 0;
+
+            if (prevIndexReceived == 0) {
+                success = true;
+            } else if (prevIndexReceived <= this.log.size() && this.log.get(prevIndexReceived).term == prevTermReceived) {
+                success = true;
+            }
+
+            if (success) {
+                this.indexStories = storeEntries(prevIndexReceived, entriesReceived, commitIndexReceived);
+
+                int lastTermSaved = this.log.get(this.indexStories).term;
+                AppendReply response = new AppendReply(this.id, this.currentTerm, success, this.indexStories, lastTermSaved, this.commitIndex);
+                getSender().tell(response, getSelf());
+            } else {
+                AppendReply appRepMessage = new AppendReply(this.id, this.currentTerm, success, -1, -1, 0);
+            }
+        }
+
+        //received a VoteRequest message
         if (message instanceof VoteRequest) {
             if (((VoteRequest) message).currentTerm > currentTerm) {
                 stepDown(((VoteRequest) message).currentTerm);
@@ -417,7 +421,10 @@ public class ServerNode extends UntypedActor {
                 lastLogIndex = getLastLogIndex();
                 lastLogTerm = getLastLogTerm(lastLogIndex);
             }
+
+            //random timeout for the election
             int electionTimeout = ThreadLocalRandom.current().nextInt(config.getInt("MIN_TIMEOUT"), config.getInt("MAX_TIMEOUT") + 1);
+            //when timeout runs out, the server starts a new election
             electionScheduler = getContext().system().scheduler().scheduleOnce(scala.concurrent.duration.Duration.create(electionTimeout, TimeUnit.MILLISECONDS), getSelf(), new ElectionMessage(), getContext().system().dispatcher(), getSelf());
             for (ActorRef q : participants) {
                 if (q != getSelf()) {
