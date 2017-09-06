@@ -19,7 +19,7 @@ Properly download and install JAVA and AKKA:
    To preserve these settings you might add those lines to your ~/.bash_profile or ~/.zshenv, etc., depending
    on the shell you use.
 
-Enter in Raft_project folder
+Enter in Raft project folder
 
 `cd out/production/Raft_project`
 `java -cp $AKKA_CLASSPATH:. Raft_configuration`
