@@ -21,5 +21,5 @@ Properly download and install JAVA and AKKA:
 
 Enter in Raft_project folder
 
-`cd out/production/Raft_project
-java -cp $AKKA_CLASSPATH:. Raft_configuration`
+`cd out/production/Raft_project`
+`java -cp $AKKA_CLASSPATH:. Raft_configuration`
