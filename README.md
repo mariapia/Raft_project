@@ -13,13 +13,13 @@ Properly download and install JAVA and AKKA:
 4. On a Unix-like system, set the following environment variables (replacing "path_to_akka" with 
    the actual path):
    
-     export AKKA_HOME=path_to_akka/akka-2.4.10
-     export AKKA_CLASSPATH=$AKKA_HOME/lib/\*:$AKKA_HOME/config:$AKKA_HOME/lib/akka/\*
+     `export AKKA_HOME=path_to_akka/akka-2.4.10
+     export AKKA_CLASSPATH=$AKKA_HOME/lib/\*:$AKKA_HOME/config:$AKKA_HOME/lib/akka/\*`
 
    To preserve these settings you might add those lines to your ~/.bash_profile or ~/.zshenv, etc., depending
    on the shell you use.
 
 Enter in Raft_project folder
 
-cd out/production/Raft_project
-java -cp $AKKA_CLASSPATH:. Raft_configuration
+`cd out/production/Raft_project
+java -cp $AKKA_CLASSPATH:. Raft_configuration`
